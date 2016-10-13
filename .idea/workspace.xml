@@ -56,8 +56,8 @@
         <option value="$PROJECT_DIR$/pidfile/pidfile_unix.go" />
         <option value="$PROJECT_DIR$/pidfile/pidfile.go" />
         <option value="$PROJECT_DIR$/signal.go" />
-        <option value="$PROJECT_DIR$/Makefile" />
         <option value="$PROJECT_DIR$/main.go" />
+        <option value="$PROJECT_DIR$/Makefile" />
       </list>
     </option>
   </component>
