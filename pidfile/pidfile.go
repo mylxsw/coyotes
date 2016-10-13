@@ -1,0 +1,42 @@
+// Package pidfile provides structure and helper functions to create and remove
+// PID file. A PID file is usually a file used to store the process ID of a
+// running process.
+package pidfile
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+// PIDFile is a file used to store the process ID of a running process.
+type PIDFile struct {
+	path string
+}
+
+func checkPIDFileAlreadyExists(path string) error {
+	if pidByte, err := ioutil.ReadFile(path); err == nil {
+		return fmt.Errorf("pid [%s] file found: %s", string(pidByte), path)
+	}
+	return nil
+}
+
+// New creates a PIDfile using the specified path.
+func New(path string) (*PIDFile, error) {
+	if err := checkPIDFileAlreadyExists(path); err != nil {
+		return nil, err
+	}
+	if err := ioutil.WriteFile(path, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
+		return nil, err
+	}
+
+	return &PIDFile{path: path}, nil
+}
+
+// Remove removes the PIDFile.
+func (file PIDFile) Remove() error {
+	if err := os.Remove(file.path); err != nil {
+		return err
+	}
+	return nil
+}
