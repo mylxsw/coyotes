@@ -17,11 +17,12 @@ import (
 	"flag"
 )
 
-var redisAddr = flag.String("redis-host", "127.0.0.1:6379", "redis连接地址")
+var redisAddr = flag.String("host", "127.0.0.1:6379", "redis连接地址")
 var pidFile = flag.String("pidfile", "/tmp/task-runner.pid", "pid文件路径")
 var concurrent = flag.Int("concurrent", 5, "并发执行线程数")
 
 var stopRunning bool = false
+var stopRunningChan chan struct{}
 var command chan string
 var outputs chan string = make(chan string, 20)
 
@@ -30,6 +31,7 @@ func main() {
 	flag.Parse()
 
 	command = make(chan string, *concurrent)
+	stopRunningChan = make(chan struct{}, *concurrent)
 
 	// 创建进程pid文件
 	pid, err := pidfile.New(*pidFile)
@@ -38,6 +40,7 @@ func main() {
 	}
 	defer pid.Remove()
 
+	log.Printf("The redis addr: %s", *redisAddr)
 	log.Printf("The process ID: %d", os.Getpid())
 
 	// 信号处理程序，接收退出信号，平滑退出进程
@@ -84,6 +87,8 @@ func worker(i int) {
 		case res := <-command:
 			params := strings.Split(res, " ")
 			executeTask(outputs, params)
+		case <-stopRunningChan:
+			return
 		}
 	}
 }
@@ -102,6 +107,7 @@ func executeTask(output chan string, params []string) error {
 		return err
 	}
 
+	log.Printf("Exec: %s", strings.Join(params, " "))
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -142,7 +148,10 @@ func initSignalReceiver() {
 			switch sig {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
 				stopRunning = true
-				close(command)
+				//close(command)
+				for i:=0; i < *concurrent; i ++ {
+					stopRunningChan <- struct {}{}
+				}
 				log.Print("Received exit signal.")
 			}
 		}
@@ -164,6 +173,7 @@ func initQueueListener(client *redis.Client) {
 			if err != nil {
 				continue
 			}
+			client.SRem("tasks:async:queue:distinct", res[1])
 
 			command <- res[1]
 		}
