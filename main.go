@@ -1,23 +1,24 @@
 package main
 
 import (
-	"gopkg.in/redis.v4"
-	"sync"
-	"fmt"
-	"os/exec"
-	"strings"
-	"io"
 	"bufio"
+	"flag"
+	"fmt"
+	"github.com/mylxsw/task-runner/pidfile"
+	"gopkg.in/redis.v4"
+	"io"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
-	"github.com/mylxsw/task-runner/pidfile"
-	"flag"
 )
 
-var redisAddr = flag.String("host", "127.0.0.1:6379", "redis连接地址")
+var redisAddr = flag.String("host", "127.0.0.1:6379", "redis连接地址，必须指定端口")
+var redisPassword = flag.String("password", "", "redis连接密码")
 var pidFile = flag.String("pidfile", "/tmp/task-runner.pid", "pid文件路径")
 var concurrent = flag.Int("concurrent", 5, "并发执行线程数")
 
@@ -47,9 +48,9 @@ func main() {
 	initSignalReceiver()
 
 	client := redis.NewClient(&redis.Options{
-		Addr: *redisAddr,
-		Password: "",
-		DB:0,
+		Addr:     *redisAddr,
+		Password: *redisPassword,
+		DB:       0,
 	})
 	defer client.Close()
 
@@ -57,7 +58,7 @@ func main() {
 	initOutput()
 
 	var wg sync.WaitGroup
-	for i := 0; i < *concurrent; i ++ {
+	for i := 0; i < *concurrent; i++ {
 		wg.Add(1)
 
 		go func(i int) {
@@ -149,8 +150,8 @@ func initSignalReceiver() {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
 				stopRunning = true
 				//close(command)
-				for i:=0; i < *concurrent; i ++ {
-					stopRunningChan <- struct {}{}
+				for i := 0; i < *concurrent; i++ {
+					stopRunningChan <- struct{}{}
 				}
 				log.Print("Received exit signal.")
 			}
@@ -169,7 +170,7 @@ func initQueueListener(client *redis.Client) {
 			if stopRunning {
 				return
 			}
-			res, err := client.BRPop(5 * time.Second, "tasks:async:queue").Result()
+			res, err := client.BRPop(5*time.Second, "tasks:async:queue").Result()
 			if err != nil {
 				continue
 			}
