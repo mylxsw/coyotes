@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/mylxsw/task-runner/pidfile"
-	"gopkg.in/redis.v4"
 	"io"
 	"log"
 	"os"
@@ -15,6 +13,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/mylxsw/task-runner/pidfile"
+	"gopkg.in/redis.v4"
 )
 
 var redisAddr = flag.String("host", "127.0.0.1:6379", "redis连接地址，必须指定端口")
@@ -61,17 +62,17 @@ func main() {
 	for i := 0; i < *concurrent; i++ {
 		wg.Add(1)
 
-		go func(i int) {
+		go func(i int, client *redis.Client) {
 			defer wg.Done()
-			worker(i)
-		}(i)
+			worker(i, client)
+		}(i, client)
 	}
 
 	wg.Wait()
 }
 
 // worker，消费队列中的命令
-func worker(i int) {
+func worker(i int, client *redis.Client) {
 	defer func() {
 		log.Printf("Task customer [%d] stopped.", i)
 	}()
@@ -86,8 +87,13 @@ func worker(i int) {
 
 		select {
 		case res := <-command:
-			params := strings.Split(res, " ")
-			executeTask(outputs, params)
+			func(res string) {
+				// 命令执行完毕才删除去重的key
+				defer client.SRem("tasks:async:queue:distinct", res)
+
+				params := strings.Split(res, " ")
+				executeTask(outputs, params)
+			}(res)
 		case <-stopRunningChan:
 			return
 		}
@@ -174,7 +180,6 @@ func initQueueListener(client *redis.Client) {
 			if err != nil {
 				continue
 			}
-			client.SRem("tasks:async:queue:distinct", res[1])
 
 			command <- res[1]
 		}
