@@ -89,7 +89,10 @@ func worker(i int, client *redis.Client) {
 		case res := <-command:
 			func(res string) {
 				// 命令执行完毕才删除去重的key
+				// TODO 这个set是兼容已有方案用的，下次更新的时候去掉即可
 				defer client.SRem("tasks:async:queue:distinct", res)
+				// 删除用于去重的缓存key
+				defer client.Del(fmt.Sprintf("tasks:distinct:%s", res))
 
 				params := strings.Split(res, " ")
 				executeTask(outputs, params)

@@ -8,6 +8,10 @@ build-linux:
 deploy:build-linux
 	scp ./bin/task-runner-linux root@192.168.1.225:/usr/bin/task-runner
 	scp ./bin/task-runner-linux root@192.168.1.226:/usr/bin/task-runner
+	scp ./bin/task-runner-linux root@192.168.1.231:/usr/bin/task-runner
+	scp ./bin/task-runner-linux root@192.168.1.232:/usr/bin/task-runner
+	scp ./bin/task-runner-linux root@192.168.200.121:/usr/bin/task-runner
+	scp ./bin/task-runner-linux root@192.168.200.177:/usr/bin/task-runner
 
 deploy-mac:build-mac
 	cp ./bin/task-runner /usr/local/bin/task-runner
