@@ -5,14 +5,6 @@ build-mac:
 build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/task-runner-linux main.go
 
-deploy:build-linux
-	scp ./bin/task-runner-linux root@192.168.1.225:/usr/bin/task-runner
-	scp ./bin/task-runner-linux root@192.168.1.226:/usr/bin/task-runner
-	scp ./bin/task-runner-linux root@192.168.1.231:/usr/bin/task-runner
-	scp ./bin/task-runner-linux root@192.168.1.232:/usr/bin/task-runner
-	scp ./bin/task-runner-linux root@192.168.200.121:/usr/bin/task-runner
-	scp ./bin/task-runner-linux root@192.168.200.177:/usr/bin/task-runner
-
 deploy-mac:build-mac
 	cp ./bin/task-runner /usr/local/bin/task-runner
 
@@ -23,3 +15,5 @@ clean-mac:
 	rm -fr ./bin/task-runner
 
 clean:clean-linux clean-mac
+
+include Makefile.local
