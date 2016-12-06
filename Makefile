@@ -1,9 +1,9 @@
 
 build-mac:
-	go build -o bin/task-runner main.go
+	go build -o bin/task-runner *.go
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/task-runner-linux main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/task-runner-linux *.go
 
 deploy-mac:build-mac
 	cp ./bin/task-runner /usr/local/bin/task-runner
