@@ -1,17 +1,17 @@
 package redis
 
 import (
-	"gopkg.in/redis.v4"
+	"fmt"
 	"log"
 	"time"
-	"fmt"
+
+	"github.com/mylxsw/task-runner/config"
+	"gopkg.in/redis.v4"
 )
 
 type RedisQueue struct {
-	StopRunning bool
-	StopRunningChan chan struct{}
-	Command chan string
-	Client *redis.Client
+	Runtime *config.Runtime
+	Client  *redis.Client
 }
 
 func (queue *RedisQueue) Listen() {
@@ -19,7 +19,7 @@ func (queue *RedisQueue) Listen() {
 	log.Print("Queue Listener started.")
 
 	for {
-		if queue.StopRunning {
+		if queue.Runtime.StopRunning {
 			return
 		}
 		res, err := queue.Client.BRPop(5*time.Second, "tasks:async:queue").Result()
@@ -27,13 +27,13 @@ func (queue *RedisQueue) Listen() {
 			continue
 		}
 
-		queue.Command <- res[1]
+		queue.Runtime.Command <- res[1]
 	}
 
 	log.Print("Queue Listener stopped.")
 }
 
-func (queue *RedisQueue) Work(i int, callback func (command string)) {
+func (queue *RedisQueue) Work(i int, callback func(command string)) {
 	defer func() {
 		log.Printf("Task customer [%d] stopped.", i)
 	}()
@@ -42,12 +42,12 @@ func (queue *RedisQueue) Work(i int, callback func (command string)) {
 
 	for {
 		// worker exit
-		if queue.StopRunning {
+		if queue.Runtime.StopRunning {
 			return
 		}
 
 		select {
-		case res := <-queue.Command:
+		case res := <-queue.Runtime.Command:
 			func(res string) {
 				// 命令执行完毕才删除去重的key
 				// TODO 这个set是兼容已有方案用的，下次更新的时候去掉即可
@@ -57,9 +57,8 @@ func (queue *RedisQueue) Work(i int, callback func (command string)) {
 
 				callback(res)
 			}(res)
-		case <-queue.StopRunningChan:
+		case <-queue.Runtime.StopRunningChan:
 			return
 		}
 	}
 }
-
