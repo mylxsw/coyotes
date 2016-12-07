@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/mylxsw/task-runner/config"
-	"gopkg.in/redis.v4"
+	"gopkg.in/redis.v5"
 )
 
 type RedisQueue struct {

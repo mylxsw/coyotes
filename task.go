@@ -10,7 +10,7 @@ import (
 	commander "github.com/mylxsw/task-runner/command"
 	"github.com/mylxsw/task-runner/config"
 	redisQueue "github.com/mylxsw/task-runner/queue/redis"
-	redis "gopkg.in/redis.v4"
+	redis "gopkg.in/redis.v5"
 )
 
 func startTaskRunner(runtime *config.Runtime) {
