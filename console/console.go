@@ -1,6 +1,10 @@
 package console
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/mylxsw/task-runner/config"
+)
 
 const (
 	TextBlack = iota + 30
@@ -13,6 +17,10 @@ const (
 	TextWhite
 )
 
-func ColorfulText(color int, text string) string {
-	return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, text)
+func ColorfulText(runtime *config.Runtime, color int, text string) string {
+	if runtime.ColorfulTTY {
+		return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, text)
+	}
+
+	return text
 }

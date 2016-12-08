@@ -18,4 +18,6 @@ type Runtime struct {
 	StopRunning     bool
 	StopRunningChan chan struct{}
 	Command         chan string
+	TaskMode        bool
+	ColorfulTTY     bool
 }

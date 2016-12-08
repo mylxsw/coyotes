@@ -1,6 +1,13 @@
 package main
 
-func welcomeMessage() string {
+import "github.com/mylxsw/task-runner/config"
+
+func welcomeMessage(runtime *config.Runtime) string {
+
+	if !runtime.ColorfulTTY {
+		return "TaskRunner Started."
+	}
+
 	return `
  _____         _    ____
 |_   _|_ _ ___| | _|  _ \ _   _ _ __  _ __   ___ _ __

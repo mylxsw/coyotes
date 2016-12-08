@@ -16,6 +16,11 @@ type RedisQueue struct {
 
 func (queue *RedisQueue) Listen() {
 
+	// 非任务模式不启用队列监听
+	if !queue.Runtime.TaskMode {
+		return
+	}
+
 	log.Print("Queue Listener started.")
 
 	for {
@@ -26,6 +31,10 @@ func (queue *RedisQueue) Listen() {
 		if err != nil {
 			continue
 		}
+
+		// 更新去重key的值为2，代表任务执行中
+		distinctKey := fmt.Sprintf("tasks:distinct:%s", res)
+		queue.Client.Set(distinctKey, 2, queue.Client.TTL(distinctKey).Val())
 
 		queue.Runtime.Command <- res[1]
 	}

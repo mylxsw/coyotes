@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/elgs/gostrgen"
-	"github.com/mylxsw/remote-tail/console"
 	commander "github.com/mylxsw/task-runner/command"
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/console"
 	redisQueue "github.com/mylxsw/task-runner/queue/redis"
 	redis "gopkg.in/redis.v5"
 )
@@ -38,11 +38,11 @@ func startTaskRunner(runtime *config.Runtime) {
 		for output := range outputChan {
 			log.Printf(
 				"%s%s %s %s %s",
-				console.ColorfulText(console.TextRed, "["+output.ProcessID+"]"),
-				console.ColorfulText(console.TextBlue, "$"),
-				console.ColorfulText(console.TextGreen, output.Name),
-				console.ColorfulText(console.TextMagenta, "->"),
-				console.ColorfulText(console.TextYellow, output.Content),
+				console.ColorfulText(runtime, console.TextRed, "["+output.ProcessID+"]"),
+				console.ColorfulText(runtime, console.TextBlue, "$"),
+				console.ColorfulText(runtime, console.TextGreen, output.Name),
+				console.ColorfulText(runtime, console.TextMagenta, "->"),
+				console.ColorfulText(runtime, console.TextYellow, output.Content),
 			)
 		}
 	}()
