@@ -105,10 +105,10 @@ return element
 
 		w.Write(success(struct {
 			Tasks []Task
-			Count int64
+			Count int
 		}{
 			Tasks: tasks,
-			Count: queueLen,
+			Count: len(tasks),
 		}))
 	})
 
