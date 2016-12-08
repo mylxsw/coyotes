@@ -1,2 +1,4 @@
-# task-runner
-并行消费redis队列任务
+# TaskRunner
+
+![](https://oayrssjpa.qnssl.com/2016-12-08-14811803808650.jpg)
+
