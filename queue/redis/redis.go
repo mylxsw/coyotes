@@ -32,10 +32,7 @@ func (queue *RedisQueue) Listen() {
 			continue
 		}
 
-		// 更新去重key的值为2，代表任务执行中
-		distinctKey := fmt.Sprintf("tasks:distinct:%s", res)
-		queue.Client.Set(distinctKey, 2, queue.Client.TTL(distinctKey).Val())
-
+		queue.Client.SAdd("tasks:async:queue:exec", res[1])
 		queue.Runtime.Command <- res[1]
 	}
 
@@ -63,6 +60,7 @@ func (queue *RedisQueue) Work(i int, callback func(command string)) {
 				defer queue.Client.SRem("tasks:async:queue:distinct", res)
 				// 删除用于去重的缓存key
 				defer queue.Client.Del(fmt.Sprintf("tasks:distinct:%s", res))
+				defer queue.Client.SRem("tasks:async:queue:exec", res)
 
 				callback(res)
 			}(res)

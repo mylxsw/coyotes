@@ -89,8 +89,17 @@ return element
 			status, _ := strconv.Atoi(client.Get(fmt.Sprintf("tasks:distinct:%s", v)).Val())
 			tasks = append(tasks, Task{
 				TaskName: v,
-				// 0-去重key已过期，1-队列中，2-执行中
+				// 0-去重key已过期，1-队列中
 				Status: status,
+			})
+		}
+
+		// 查询执行中的任务
+		for _, v := range client.SMembers("tasks:async:queue:exec").Val() {
+			tasks = append(tasks, Task{
+				TaskName: v,
+				// 2-执行中
+				Status: 2,
 			})
 		}
 
