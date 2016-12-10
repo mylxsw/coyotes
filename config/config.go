@@ -10,14 +10,18 @@ type HttpConfig struct {
 	ListenAddr string
 }
 
+type Config struct {
+	Redis       RedisConfig
+	Http        HttpConfig
+	Concurrent  int
+	PidFile     string
+	TaskMode    bool
+	ColorfulTTY bool
+}
+
 type Runtime struct {
-	Redis           RedisConfig
-	Http            HttpConfig
-	Concurrent      int
-	PidFile         string
+	Config          Config
 	StopRunning     bool
 	StopRunningChan chan struct{}
 	Command         chan string
-	TaskMode        bool
-	ColorfulTTY     bool
 }

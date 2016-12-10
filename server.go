@@ -46,9 +46,9 @@ func failed(message string) []byte {
 
 func startHttpServer(runtime *config.Runtime) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     runtime.Redis.Addr,
-		Password: runtime.Redis.Password,
-		DB:       runtime.Redis.DB,
+		Addr:     runtime.Config.Redis.Addr,
+		Password: runtime.Config.Redis.Password,
+		DB:       runtime.Config.Redis.DB,
 	})
 	defer client.Close()
 
@@ -137,8 +137,8 @@ return element
 		}))
 	})
 
-	log.Printf("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Http.ListenAddr))
-	if err := http.ListenAndServe(runtime.Http.ListenAddr, nil); err != nil {
+	log.Printf("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.Http.ListenAddr))
+	if err := http.ListenAndServe(runtime.Config.Http.ListenAddr, nil); err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }

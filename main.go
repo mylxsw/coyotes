@@ -25,20 +25,22 @@ func main() {
 	flag.Parse()
 
 	runtime := &config.Runtime{
-		PidFile:    *pidFile,
-		Concurrent: *concurrent,
-		Redis: config.RedisConfig{
-			Addr:     *redisAddr,
-			Password: *redisPassword,
-		},
-		Http: config.HttpConfig{
-			ListenAddr: *httpAddr,
+		Config: config.Config{
+			PidFile:    *pidFile,
+			Concurrent: *concurrent,
+			Redis: config.RedisConfig{
+				Addr:     *redisAddr,
+				Password: *redisPassword,
+			},
+			Http: config.HttpConfig{
+				ListenAddr: *httpAddr,
+			},
+			TaskMode:    *taskMode,
+			ColorfulTTY: *colorfulTTY,
 		},
 		StopRunning:     false,
 		StopRunningChan: make(chan struct{}, *concurrent),
 		Command:         make(chan string, *concurrent),
-		TaskMode:        *taskMode,
-		ColorfulTTY:     *colorfulTTY,
 	}
 
 	// 创建进程pid文件
@@ -50,7 +52,7 @@ func main() {
 
 	fmt.Println(console.ColorfulText(runtime, console.TextCyan, welcomeMessage(runtime)))
 
-	log.Printf("The redis addr: %s", runtime.Redis.Addr)
+	log.Printf("The redis addr: %s", runtime.Config.Redis.Addr)
 	log.Printf("The process ID: %d", os.Getpid())
 
 	// 信号处理程序，接收退出信号，平滑退出进程

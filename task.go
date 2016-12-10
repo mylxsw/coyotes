@@ -17,9 +17,9 @@ func startTaskRunner(runtime *config.Runtime) {
 	outputChan := make(chan commander.Output, 20)
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     runtime.Redis.Addr,
-		Password: runtime.Redis.Password,
-		DB:       runtime.Redis.DB,
+		Addr:     runtime.Config.Redis.Addr,
+		Password: runtime.Config.Redis.Password,
+		DB:       runtime.Config.Redis.DB,
 	})
 	defer client.Close()
 
@@ -52,7 +52,7 @@ func startTaskRunner(runtime *config.Runtime) {
 	}
 
 	var wg sync.WaitGroup
-	for index := 0; index < runtime.Concurrent; index++ {
+	for index := 0; index < runtime.Config.Concurrent; index++ {
 		wg.Add(1)
 
 		go func(i int, client *redis.Client) {

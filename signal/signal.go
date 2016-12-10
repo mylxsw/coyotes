@@ -26,7 +26,7 @@ func InitSignalReceiver(runtime *config.Runtime) {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
 				runtime.StopRunning = true
 				//close(command)
-				for i := 0; i < runtime.Concurrent; i++ {
+				for i := 0; i < runtime.Config.Concurrent; i++ {
 					runtime.StopRunningChan <- struct{}{}
 				}
 				log.Print("Received exit signal.")

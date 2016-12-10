@@ -18,7 +18,7 @@ const (
 )
 
 func ColorfulText(runtime *config.Runtime, color int, text string) string {
-	if runtime.ColorfulTTY {
+	if runtime.Config.ColorfulTTY {
 		return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, text)
 	}
 

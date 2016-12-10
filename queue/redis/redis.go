@@ -17,7 +17,7 @@ type RedisQueue struct {
 func (queue *RedisQueue) Listen() {
 
 	// 非任务模式不启用队列监听
-	if !queue.Runtime.TaskMode {
+	if !queue.Runtime.Config.TaskMode {
 		return
 	}
 
