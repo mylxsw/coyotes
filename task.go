@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"os"
 	"sync"
 
-	"github.com/elgs/gostrgen"
 	commander "github.com/mylxsw/task-runner/command"
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/console"
+	"github.com/mylxsw/task-runner/log"
 	redisQueue "github.com/mylxsw/task-runner/queue/redis"
 	redis "gopkg.in/redis.v5"
 )
 
-func startTaskRunner(runtime *config.Runtime) {
+func startTaskRunner(runtime *config.Runtime, channel *config.Channel) {
 	outputChan := make(chan commander.Output, 20)
+	defer close(outputChan)
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     runtime.Config.Redis.Addr,
@@ -24,7 +24,8 @@ func startTaskRunner(runtime *config.Runtime) {
 	defer client.Close()
 
 	if _, err := client.Ping().Result(); err != nil {
-		log.Fatalf("Error: %s", err)
+		log.Error("Error: %s", err)
+		os.Exit(2)
 	}
 
 	queue := redisQueue.RedisQueue{
@@ -32,11 +33,9 @@ func startTaskRunner(runtime *config.Runtime) {
 		Runtime: runtime,
 	}
 
-	go queue.Listen()
-
 	go func() {
 		for output := range outputChan {
-			log.Printf(
+			log.Info(
 				"%s%s %s %s %s",
 				console.ColorfulText(runtime, console.TextRed, "["+output.ProcessID+"]"),
 				console.ColorfulText(runtime, console.TextBlue, "$"),
@@ -47,22 +46,25 @@ func startTaskRunner(runtime *config.Runtime) {
 		}
 	}()
 
-	cmder := &commander.Command{
-		Output: outputChan,
-	}
-
 	var wg sync.WaitGroup
-	for index := 0; index < runtime.Config.Concurrent; index++ {
-		wg.Add(1)
+	wg.Add(runtime.Config.Concurrent + 1)
 
-		go func(i int, client *redis.Client) {
+	go func() {
+		defer wg.Done()
+		queue.Listen(channel)
+	}()
+
+	for index := 0; index < runtime.Config.Concurrent; index++ {
+		go func(i int, client *redis.Client, channel *config.Channel) {
 			defer wg.Done()
 
-			queue.Work(i, func(cmd string) {
-				routineName, _ := gostrgen.RandGen(10, gostrgen.Upper, "", "Ol")
-				cmder.ExecuteTask(fmt.Sprintf("%s %d", routineName, index), cmd)
+			queue.Work(i, channel, func(cmd string, processID string) {
+				cmder := &commander.Command{
+					Output: outputChan,
+				}
+				cmder.ExecuteTask(processID, cmd)
 			})
-		}(index, client)
+		}(index, client, channel)
 	}
 
 	wg.Wait()

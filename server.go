@@ -3,21 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
-
-	"strconv"
 
 	"github.com/mylxsw/remote-tail/console"
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/log"
+
+	"os"
+
+	redisQueue "github.com/mylxsw/task-runner/queue/redis"
 	redis "gopkg.in/redis.v5"
 )
 
-type Task struct {
-	TaskName string
-	Status   int
-}
-
+// Http Response
 type Response struct {
 	StatusCode int
 	Message    string
@@ -44,23 +42,13 @@ func failed(message string) []byte {
 	})
 }
 
-func startHttpServer(runtime *config.Runtime) {
+func startHTTPServer(runtime *config.Runtime) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     runtime.Config.Redis.Addr,
 		Password: runtime.Config.Redis.Password,
 		DB:       runtime.Config.Redis.DB,
 	})
 	defer client.Close()
-
-	script := `
-local element = redis.call("EXISTS", KEYS[1])
-if element ~= 1 then
-    redis.call("LPUSH", "tasks:async:queue", ARGV[1])
-	redis.call("SETEX", KEYS[1], 1800, '1')
-end
-return element
-`
-	pushToQueue := redis.NewScript(script)
 
 	// 欢迎界面
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -75,36 +63,21 @@ return element
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 
-		queueLen := client.LLen("tasks:async:queue").Val()
-		vals, err := client.LRange("tasks:async:queue", 0, queueLen).Result()
+		taskChannel := r.PostFormValue("channel")
+		if taskChannel == "" {
+			taskChannel = runtime.Config.DefaultChannel
+		}
+
+		tasks, err := redisQueue.QueryTaskQueue(client, taskChannel)
 		if err != nil {
 			message := fmt.Sprintf("ERROR: %v", err)
-			log.Println(message)
+			log.Error(message)
 			w.Write(failed(message))
 			return
 		}
 
-		tasks := []Task{}
-		for _, v := range vals {
-			status, _ := strconv.Atoi(client.Get(fmt.Sprintf("tasks:distinct:%s", v)).Val())
-			tasks = append(tasks, Task{
-				TaskName: v,
-				// 0-去重key已过期，1-队列中
-				Status: status,
-			})
-		}
-
-		// 查询执行中的任务
-		for _, v := range client.SMembers("tasks:async:queue:exec").Val() {
-			tasks = append(tasks, Task{
-				TaskName: v,
-				// 2-执行中
-				Status: 2,
-			})
-		}
-
 		w.Write(success(struct {
-			Tasks []Task
+			Tasks []redisQueue.Task
 			Count int
 		}{
 			Tasks: tasks,
@@ -118,12 +91,21 @@ return element
 		w.WriteHeader(http.StatusOK)
 
 		taskName := r.PostFormValue("task")
+		taskChannel := r.PostFormValue("channel")
 
-		taskNameKey := fmt.Sprintf("tasks:distinct:%s", taskName)
-		rs, err := pushToQueue.Run(client, []string{taskNameKey}, taskName).Result()
+		if taskChannel == "" {
+			taskChannel = runtime.Config.DefaultChannel
+		}
+
+		if _, ok := runtime.Channels[taskChannel]; !ok {
+			w.Write(failed("channel不存在"))
+			return
+		}
+
+		rs, err := redisQueue.PushTaskToQueue(client, taskName, taskChannel)
 		if err != nil {
 			message := fmt.Sprintf("ERROR: %v", err)
-			log.Println(message)
+			log.Error(message)
 			w.Write(failed(message))
 			return
 		}
@@ -137,8 +119,9 @@ return element
 		}))
 	})
 
-	log.Printf("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.Http.ListenAddr))
+	log.Info("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.Http.ListenAddr))
 	if err := http.ListenAndServe(runtime.Config.Http.ListenAddr, nil); err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Error("Error: %v", err)
+		os.Exit(2)
 	}
 }

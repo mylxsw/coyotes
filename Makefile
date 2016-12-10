@@ -1,3 +1,6 @@
+run:build-mac
+	./bin/task-runner -colorful-tty=true
+
 
 build-mac:
 	go build -o bin/task-runner *.go

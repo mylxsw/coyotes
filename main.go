@@ -3,11 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
+
+	"sync"
 
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/console"
+	"github.com/mylxsw/task-runner/log"
 	"github.com/mylxsw/task-runner/pidfile"
 	"github.com/mylxsw/task-runner/signal"
 )
@@ -19,6 +21,7 @@ var pidFile = flag.String("pidfile", "/tmp/task-runner.pid", "pid文件路径")
 var concurrent = flag.Int("concurrent", 5, "并发执行线程数")
 var taskMode = flag.Bool("task-mode", true, "是否启用任务模式，默认启用，关闭则不会执行消费")
 var colorfulTTY = flag.Bool("colorful-tty", false, "是否启用彩色模式的控制台输出")
+var defaultChannel = flag.String("channel-default", "default", "默认channel名称，用于消息队列")
 
 func main() {
 
@@ -35,29 +38,50 @@ func main() {
 			Http: config.HttpConfig{
 				ListenAddr: *httpAddr,
 			},
-			TaskMode:    *taskMode,
-			ColorfulTTY: *colorfulTTY,
+			TaskMode:       *taskMode,
+			ColorfulTTY:    *colorfulTTY,
+			DefaultChannel: *defaultChannel,
 		},
-		StopRunning:     false,
-		StopRunningChan: make(chan struct{}, *concurrent),
-		Command:         make(chan string, *concurrent),
+		Channels: map[string]*config.Channel{
+			*defaultChannel: &config.Channel{
+				Name:    *defaultChannel,
+				Command: make(chan string, 20),
+			},
+			"biz": &config.Channel{
+				Name:    "biz",
+				Command: make(chan string, 20),
+			},
+		},
 	}
+	runtime.Stoped = make(chan struct{}, len(runtime.Channels))
 
 	// 创建进程pid文件
 	pid, err := pidfile.New(*pidFile)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Error("Error: %v", err)
+		os.Exit(2)
 	}
 	defer pid.Remove()
 
 	fmt.Println(console.ColorfulText(runtime, console.TextCyan, welcomeMessage(runtime)))
 
-	log.Printf("The redis addr: %s", runtime.Config.Redis.Addr)
-	log.Printf("The process ID: %d", os.Getpid())
+	log.Info("The redis addr: %s", runtime.Config.Redis.Addr)
+	log.Info("The process ID: %d", os.Getpid())
 
 	// 信号处理程序，接收退出信号，平滑退出进程
 	signal.InitSignalReceiver(runtime)
 
-	go startHttpServer(runtime)
-	startTaskRunner(runtime)
+	go startHTTPServer(runtime)
+
+	var wg sync.WaitGroup
+
+	for index := range runtime.Channels {
+		wg.Add(1)
+		go func(i string) {
+			defer wg.Done()
+			startTaskRunner(runtime, runtime.Channels[i])
+		}(index)
+	}
+
+	wg.Wait()
 }

@@ -1,13 +1,14 @@
 package command
 
 import (
-	"os/exec"
-	"strings"
-	"log"
-	"sync"
-	"io"
 	"bufio"
 	"fmt"
+	"io"
+	"os/exec"
+	"strings"
+	"sync"
+
+	"github.com/mylxsw/task-runner/log"
 )
 
 type Output struct {
@@ -35,7 +36,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Printf("[%s]Exec: %s", processID, cmdStr)
+	log.Info("[%s]Exec: %s", processID, cmdStr)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -57,7 +58,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Printf("[%s]Finished: %s", processID, cmdStr)
+	log.Info("[%s]Finished: %s", processID, cmdStr)
 
 	return nil
 }
@@ -76,11 +77,10 @@ func (self Command) bindOutput(processID string, name string, input *io.ReadClos
 
 		self.Output <- Output{
 			ProcessID: processID,
-			Name: name,
-			Content: strings.TrimRight(line, "\n"),
+			Name:      name,
+			Content:   strings.TrimRight(line, "\n"),
 		}
 	}
 
 	return nil
 }
-

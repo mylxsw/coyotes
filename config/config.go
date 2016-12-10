@@ -11,17 +11,22 @@ type HttpConfig struct {
 }
 
 type Config struct {
-	Redis       RedisConfig
-	Http        HttpConfig
-	Concurrent  int
-	PidFile     string
-	TaskMode    bool
-	ColorfulTTY bool
+	Redis          RedisConfig
+	Http           HttpConfig
+	Concurrent     int
+	PidFile        string
+	TaskMode       bool
+	ColorfulTTY    bool
+	DefaultChannel string
+}
+
+type Channel struct {
+	Name    string
+	Command chan string
 }
 
 type Runtime struct {
-	Config          Config
-	StopRunning     bool
-	StopRunningChan chan struct{}
-	Command         chan string
+	Config   Config
+	Stoped   chan struct{}
+	Channels map[string]*Channel
 }

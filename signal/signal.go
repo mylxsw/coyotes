@@ -1,12 +1,12 @@
 package signal
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/log"
 )
 
 // 初始化信号接受处理程序
@@ -24,12 +24,11 @@ func InitSignalReceiver(runtime *config.Runtime) {
 			sig := <-signalChan
 			switch sig {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
-				runtime.StopRunning = true
-				//close(command)
-				for i := 0; i < runtime.Config.Concurrent; i++ {
-					runtime.StopRunningChan <- struct{}{}
+				log.Info("Received exit signal, Waiting for exit...")
+
+				for i := 0; i < len(runtime.Channels); i++ {
+					runtime.Stoped <- struct{}{}
 				}
-				log.Print("Received exit signal.")
 			}
 		}
 	}()
