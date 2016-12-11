@@ -36,7 +36,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Info("[%s]Exec: %s", processID, cmdStr)
+	log.Debug("[%s]Command started: %s", processID, cmdStr)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Info("[%s]Finished: %s", processID, cmdStr)
+	log.Debug("[%s]Command execution success: %s", processID, cmdStr)
 
 	return nil
 }
@@ -70,7 +70,7 @@ func (self Command) bindOutput(processID string, name string, input *io.ReadClos
 		line, err := reader.ReadString('\n')
 		if err != nil || io.EOF == err {
 			if err != io.EOF {
-				return fmt.Errorf("[%s]命令执行失败: %s", processID, err)
+				return fmt.Errorf("[%s]Command execution failed: %s", processID, err)
 			}
 			break
 		}

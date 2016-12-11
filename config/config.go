@@ -1,18 +1,21 @@
 package config
 
+// RedisConfig hold redis configuration
 type RedisConfig struct {
 	Addr     string
 	Password string
 	DB       int
 }
 
-type HttpConfig struct {
+// HTTPConfig hold http configuration
+type HTTPConfig struct {
 	ListenAddr string
 }
 
+// Config hold all the configuration
 type Config struct {
 	Redis          RedisConfig
-	Http           HttpConfig
+	HTTP           HTTPConfig
 	Concurrent     int
 	PidFile        string
 	TaskMode       bool
@@ -20,11 +23,14 @@ type Config struct {
 	DefaultChannel string
 }
 
+// Channel is the command queue
 type Channel struct {
-	Name    string
-	Command chan string
+	Name     string
+	Command  chan string
+	Distinct bool
 }
 
+// Runtime hold global runtime configuration
 type Runtime struct {
 	Config   Config
 	Stoped   chan struct{}

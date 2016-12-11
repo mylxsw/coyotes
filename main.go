@@ -35,7 +35,7 @@ func main() {
 				Addr:     *redisAddr,
 				Password: *redisPassword,
 			},
-			Http: config.HttpConfig{
+			HTTP: config.HTTPConfig{
 				ListenAddr: *httpAddr,
 			},
 			TaskMode:       *taskMode,
@@ -44,29 +44,40 @@ func main() {
 		},
 		Channels: map[string]*config.Channel{
 			*defaultChannel: &config.Channel{
-				Name:    *defaultChannel,
-				Command: make(chan string, 20),
+				Name:     *defaultChannel,
+				Command:  make(chan string, 20),
+				Distinct: true,
 			},
 			"biz": &config.Channel{
-				Name:    "biz",
-				Command: make(chan string, 20),
+				Name:     "biz",
+				Command:  make(chan string, 20),
+				Distinct: true,
+			},
+			"normal": &config.Channel{
+				Name:     "normal",
+				Command:  make(chan string, 20),
+				Distinct: false,
 			},
 		},
 	}
+
+	// 用于向所有channel发送程序退出信号
 	runtime.Stoped = make(chan struct{}, len(runtime.Channels))
 
 	// 创建进程pid文件
 	pid, err := pidfile.New(*pidFile)
 	if err != nil {
-		log.Error("Error: %v", err)
+		log.Error("Failed to create pidfile: %v", err)
 		os.Exit(2)
 	}
 	defer pid.Remove()
 
-	fmt.Println(console.ColorfulText(runtime, console.TextCyan, welcomeMessage(runtime)))
+	if *colorfulTTY {
+		fmt.Println(console.ColorfulText(runtime, console.TextCyan, welcomeMessage(runtime)))
+	}
 
-	log.Info("The redis addr: %s", runtime.Config.Redis.Addr)
-	log.Info("The process ID: %d", os.Getpid())
+	log.Debug("The redis addr: %s", runtime.Config.Redis.Addr)
+	log.Debug("The process ID: %d", os.Getpid())
 
 	// 信号处理程序，接收退出信号，平滑退出进程
 	signal.InitSignalReceiver(runtime)

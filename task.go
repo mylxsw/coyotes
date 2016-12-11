@@ -24,7 +24,7 @@ func startTaskRunner(runtime *config.Runtime, channel *config.Channel) {
 	defer client.Close()
 
 	if _, err := client.Ping().Result(); err != nil {
-		log.Error("Error: %s", err)
+		log.Error("Failed connected to redis server: %s", err)
 		os.Exit(2)
 	}
 

@@ -102,9 +102,9 @@ func startHTTPServer(runtime *config.Runtime) {
 			return
 		}
 
-		rs, err := redisQueue.PushTaskToQueue(client, taskName, taskChannel)
+		rs, err := redisQueue.PushTaskToQueue(client, taskName, taskChannel, runtime.Channels[taskChannel].Distinct)
 		if err != nil {
-			message := fmt.Sprintf("ERROR: %v", err)
+			message := fmt.Sprintf("Failed push task [%s] to redis queue [%s]: %v", taskName, taskChannel, err)
 			log.Error(message)
 			w.Write(failed(message))
 			return
@@ -115,13 +115,13 @@ func startHTTPServer(runtime *config.Runtime) {
 			Result   bool
 		}{
 			TaskName: taskName,
-			Result:   int64(rs.(int64)) == 0,
+			Result:   int64(rs.(int64)) == 1,
 		}))
 	})
 
-	log.Info("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.Http.ListenAddr))
-	if err := http.ListenAndServe(runtime.Config.Http.ListenAddr, nil); err != nil {
-		log.Error("Error: %v", err)
+	log.Debug("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
+	if err := http.ListenAndServe(runtime.Config.HTTP.ListenAddr, nil); err != nil {
+		log.Error("Failed listening http on %s: %v", runtime.Config.HTTP.ListenAddr, err)
 		os.Exit(2)
 	}
 }
