@@ -18,7 +18,9 @@ func StartHTTPServer() {
 	// check the server status
 	http.HandleFunc("/status", handler.Status)
 	// push task to task queue
-	http.HandleFunc("/push", handler.TaskPush)
+	http.HandleFunc("/push", handler.PushTask)
+	// create new task queue
+	http.HandleFunc("/queue", handler.NewQueue)
 
 	runtime := config.GetRuntime()
 	log.Debug("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))

@@ -31,6 +31,9 @@ func InitSignalReceiver() {
 				for i := 0; i < len(runtime.Channels); i++ {
 					runtime.Stoped <- struct{}{}
 				}
+
+				runtime.StopScheduler <- struct{}{}
+				runtime.StopHTTPServer <- struct{}{}
 			}
 		}
 	}()

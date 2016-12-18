@@ -43,15 +43,15 @@ func StartTaskRunner(channel *config.Channel) {
 	}()
 
 	var wg sync.WaitGroup
-	wg.Add(runtime.Config.Concurrent + 1)
+	wg.Add(channel.WorkerCount + 1)
 
 	go func() {
 		defer wg.Done()
 		queue.Listen(channel)
 	}()
 
-	for index := 0; index < runtime.Config.Concurrent; index++ {
-		go func(i int, channel *config.Channel) {
+	for index := 0; index < channel.WorkerCount; index++ {
+		go func(i int) {
 			defer wg.Done()
 
 			queue.Work(i, channel, func(cmd string, processID string) {
@@ -60,7 +60,7 @@ func StartTaskRunner(channel *config.Channel) {
 				}
 				cmder.ExecuteTask(processID, cmd)
 			})
-		}(index, channel)
+		}(index)
 	}
 
 	wg.Wait()

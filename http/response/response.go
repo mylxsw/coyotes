@@ -1,6 +1,7 @@
 package response
 
 import "encoding/json"
+import "net/http"
 
 // Response is the result to user and it will be convert to a json object
 type Response struct {
@@ -30,4 +31,9 @@ func Failed(message string) []byte {
 		StatusCode: 500,
 		Message:    message,
 	})
+}
+
+func SendJSONResponseHeader(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
 }

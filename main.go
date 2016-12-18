@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/console"
 	"github.com/mylxsw/task-runner/log"
 	"github.com/mylxsw/task-runner/pidfile"
+	"github.com/mylxsw/task-runner/scheduler"
 	"github.com/mylxsw/task-runner/signal"
 
 	server "github.com/mylxsw/task-runner/http"
-	task "github.com/mylxsw/task-runner/task"
 )
 
 func main() {
@@ -38,16 +37,8 @@ func main() {
 	signal.InitSignalReceiver()
 
 	go server.StartHTTPServer()
+	scheduler.Schedule()
 
-	var wg sync.WaitGroup
-
-	for index := range runtime.Channels {
-		wg.Add(1)
-		go func(i string) {
-			defer wg.Done()
-			task.StartTaskRunner(runtime.Channels[i])
-		}(index)
-	}
-
-	wg.Wait()
+	<-runtime.StopHTTPServer
+	log.Debug("All stoped.")
 }

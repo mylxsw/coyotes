@@ -10,10 +10,8 @@ import (
 	"github.com/mylxsw/task-runner/log"
 )
 
-func TaskPush(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
+func PushTask(w http.ResponseWriter, r *http.Request) {
+	response.SendJSONResponseHeader(w)
 	runtime := config.GetRuntime()
 
 	taskName := r.PostFormValue("task")
