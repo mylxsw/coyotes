@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
 	"sync"
 
 	"github.com/mylxsw/task-runner/config"
@@ -12,6 +11,9 @@ import (
 	"github.com/mylxsw/task-runner/log"
 	"github.com/mylxsw/task-runner/pidfile"
 	"github.com/mylxsw/task-runner/signal"
+
+	server "github.com/mylxsw/task-runner/http"
+	task "github.com/mylxsw/task-runner/task"
 )
 
 var redisAddr = flag.String("host", "127.0.0.1:6379", "redis连接地址，必须指定端口")
@@ -73,7 +75,7 @@ func main() {
 	defer pid.Remove()
 
 	if *colorfulTTY {
-		fmt.Println(console.ColorfulText(runtime, console.TextCyan, welcomeMessage(runtime)))
+		fmt.Println(console.ColorfulText(runtime, console.TextCyan, config.WelcomeMessage(runtime)))
 	}
 
 	log.Debug("The redis addr: %s", runtime.Config.Redis.Addr)
@@ -82,7 +84,7 @@ func main() {
 	// 信号处理程序，接收退出信号，平滑退出进程
 	signal.InitSignalReceiver(runtime)
 
-	go startHTTPServer(runtime)
+	go server.StartHTTPServer(runtime)
 
 	var wg sync.WaitGroup
 
@@ -90,7 +92,7 @@ func main() {
 		wg.Add(1)
 		go func(i string) {
 			defer wg.Done()
-			startTaskRunner(runtime, runtime.Channels[i])
+			task.StartTaskRunner(runtime, runtime.Channels[i])
 		}(index)
 	}
 

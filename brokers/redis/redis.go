@@ -153,6 +153,7 @@ func PushTaskToQueue(client *redis.Client, taskName string, channelName string, 
 
 // 查询任务队列
 func QueryTaskQueue(client *redis.Client, channel string) (tasks []Task, err error) {
+	tasks = []Task{}
 
 	vals, err := client.LRange(TaskQueueKey(channel), 0, client.LLen(TaskQueueKey(channel)).Val()).Result()
 	if err != nil {

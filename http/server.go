@@ -1,32 +1,33 @@
-package main
+package http
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/mylxsw/remote-tail/console"
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/log"
 
-	"os"
-
-	redisQueue "github.com/mylxsw/task-runner/queue/redis"
+	broker "github.com/mylxsw/task-runner/brokers/redis"
 	redis "gopkg.in/redis.v5"
 )
 
-// Http Response
+// Response is the result to user and it will be convert to a json object
 type Response struct {
-	StatusCode int
-	Message    string
-	Data       interface{}
+	StatusCode int         `json:"status_code"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
 }
 
+// resposne function convert object to json response
 func response(result Response) []byte {
 	res, _ := json.Marshal(result)
 	return res
 }
 
+// success function return a successful message to user
 func success(result interface{}) []byte {
 	return response(Response{
 		StatusCode: 200,
@@ -35,6 +36,7 @@ func success(result interface{}) []byte {
 	})
 }
 
+// failed function return a failed message to user
 func failed(message string) []byte {
 	return response(Response{
 		StatusCode: 500,
@@ -42,7 +44,8 @@ func failed(message string) []byte {
 	})
 }
 
-func startHTTPServer(runtime *config.Runtime) {
+// StartHTTPServer start an http server instance serving for api request
+func StartHTTPServer(runtime *config.Runtime) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     runtime.Config.Redis.Addr,
 		Password: runtime.Config.Redis.Password,
@@ -50,15 +53,15 @@ func startHTTPServer(runtime *config.Runtime) {
 	})
 	defer client.Close()
 
-	// 欢迎界面
+	// print welcome message
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 
-		w.Write([]byte(welcomeMessage(runtime)))
+		w.Write([]byte(config.WelcomeMessage(runtime)))
 	})
 
-	// 运行状态查询
+	// check the server status
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -68,7 +71,7 @@ func startHTTPServer(runtime *config.Runtime) {
 			taskChannel = runtime.Config.DefaultChannel
 		}
 
-		tasks, err := redisQueue.QueryTaskQueue(client, taskChannel)
+		tasks, err := broker.QueryTaskQueue(client, taskChannel)
 		if err != nil {
 			message := fmt.Sprintf("ERROR: %v", err)
 			log.Error(message)
@@ -77,15 +80,15 @@ func startHTTPServer(runtime *config.Runtime) {
 		}
 
 		w.Write(success(struct {
-			Tasks []redisQueue.Task
-			Count int
+			Tasks []broker.Task `json:"tasks"`
+			Count int           `json:"count"`
 		}{
 			Tasks: tasks,
 			Count: len(tasks),
 		}))
 	})
 
-	// 任务推送
+	// push task to task queue
 	http.HandleFunc("/push", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -102,7 +105,7 @@ func startHTTPServer(runtime *config.Runtime) {
 			return
 		}
 
-		rs, err := redisQueue.PushTaskToQueue(client, taskName, taskChannel, runtime.Channels[taskChannel].Distinct)
+		rs, err := broker.PushTaskToQueue(client, taskName, taskChannel, runtime.Channels[taskChannel].Distinct)
 		if err != nil {
 			message := fmt.Sprintf("Failed push task [%s] to redis queue [%s]: %v", taskName, taskChannel, err)
 			log.Error(message)
@@ -111,8 +114,8 @@ func startHTTPServer(runtime *config.Runtime) {
 		}
 
 		w.Write(success(struct {
-			TaskName string
-			Result   bool
+			TaskName string `json:"task_name"`
+			Result   bool   `json:"result"`
 		}{
 			TaskName: taskName,
 			Result:   int64(rs.(int64)) == 1,

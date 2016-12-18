@@ -1,18 +1,19 @@
-package main
+package task
 
 import (
 	"os"
 	"sync"
 
+	broker "github.com/mylxsw/task-runner/brokers/redis"
 	commander "github.com/mylxsw/task-runner/command"
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/console"
 	"github.com/mylxsw/task-runner/log"
-	redisQueue "github.com/mylxsw/task-runner/queue/redis"
 	redis "gopkg.in/redis.v5"
 )
 
-func startTaskRunner(runtime *config.Runtime, channel *config.Channel) {
+// StartTaskRunner function start a taskRunner instance
+func StartTaskRunner(runtime *config.Runtime, channel *config.Channel) {
 	outputChan := make(chan commander.Output, 20)
 	defer close(outputChan)
 
@@ -28,7 +29,7 @@ func startTaskRunner(runtime *config.Runtime, channel *config.Channel) {
 		os.Exit(2)
 	}
 
-	queue := redisQueue.RedisQueue{
+	queue := broker.RedisQueue{
 		Client:  client,
 		Runtime: runtime,
 	}

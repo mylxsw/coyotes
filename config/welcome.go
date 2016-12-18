@@ -1,8 +1,7 @@
-package main
+package config
 
-import "github.com/mylxsw/task-runner/config"
-
-func welcomeMessage(runtime *config.Runtime) string {
+// WelcomeMessage function print welcome message
+func WelcomeMessage(runtime *Runtime) string {
 
 	if !runtime.Config.ColorfulTTY {
 		return "TaskRunner Started."
