@@ -10,7 +10,7 @@ import (
 )
 
 // 初始化信号接受处理程序
-func InitSignalReceiver(runtime *config.Runtime) {
+func InitSignalReceiver() {
 	signalChan := make(chan os.Signal)
 	signal.Notify(
 		signalChan,
@@ -20,6 +20,8 @@ func InitSignalReceiver(runtime *config.Runtime) {
 		syscall.SIGKILL,
 	)
 	go func() {
+		runtime := config.GetRuntime()
+
 		for {
 			sig := <-signalChan
 			switch sig {

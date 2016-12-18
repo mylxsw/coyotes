@@ -1,7 +1,7 @@
 package config
 
 // WelcomeMessage function print welcome message
-func WelcomeMessage(runtime *Runtime) string {
+func WelcomeMessage() string {
 
 	if !runtime.Config.ColorfulTTY {
 		return "TaskRunner Started."
