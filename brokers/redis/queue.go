@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/console"
 	"github.com/mylxsw/task-runner/log"
 	redis "gopkg.in/redis.v5"
 )
@@ -30,7 +31,7 @@ func PushTask(taskName string, channelName string, distinct bool) (interface{}, 
 	client := createRedisClient()
 	defer client.Close()
 
-	log.Info("Push: %s -> %s", taskName, channelName)
+	log.Info("push: %s -> %s", taskName, channelName)
 
 	return pushToQueueCmd.Run(
 		client,
@@ -84,8 +85,8 @@ func (queue *Queue) Listen(channel *config.Channel) {
 		return
 	}
 
-	log.Debug("Queue Listener %s started.", channel.Name)
-	defer log.Debug("Queue Listener %s stopped.", channel.Name)
+	log.Debug("queue Listener %s started.", channel.Name)
+	defer log.Debug("queue Listener %s stopped.", channel.Name)
 
 	for {
 		select {
@@ -109,8 +110,8 @@ func (queue *Queue) Listen(channel *config.Channel) {
 func (queue *Queue) Work(i int, channel *config.Channel, callback func(command string, processID string)) {
 	processID := fmt.Sprintf("%s %d", channel.Name, i)
 
-	log.Debug("Task customer [%s] started.", processID)
-	defer log.Debug("Task customer [%s] stopped.", processID)
+	log.Debug("task customer [%s] started.", console.ColorfulText(console.TextRed, processID))
+	defer log.Debug("task customer [%s] stopped.", console.ColorfulText(console.TextRed, processID))
 
 	for {
 		select {
@@ -128,19 +129,19 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command s
 					distinctKey := TaskQueueDistinctKey(channel.Name, res)
 					execKey := TaskQueueExecKey(channel.Name)
 
-					log.Debug("[%s] clean %s %s ...", processID, distinctKey, execKey)
+					log.Debug("[%s] clean %s %s ...", console.ColorfulText(console.TextRed, processID), distinctKey, execKey)
 
 					err := queue.Client.Del(distinctKey).Err()
 					if err != nil {
-						log.Error("Delete key %s failed: %v", distinctKey, err)
+						log.Error("[%s] delete key %s failed: %v", console.ColorfulText(console.TextRed, processID), distinctKey, err)
 					}
 
 					err = queue.Client.SRem(execKey, res).Err()
 					if err != nil {
-						log.Error("Remove key %s from %s: %v", res, execKey, err)
+						log.Error("[%s] remove key %s from %s: %v", console.ColorfulText(console.TextRed, processID), res, execKey, err)
 					}
 
-					log.Info("[%s] time-consuming %v", processID, time.Since(startTime))
+					log.Info("[%s] time-consuming %v", console.ColorfulText(console.TextRed, processID), time.Since(startTime))
 				}()
 
 				callback(res, processID)

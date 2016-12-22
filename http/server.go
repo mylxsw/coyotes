@@ -23,9 +23,9 @@ func StartHTTPServer() {
 	http.HandleFunc("/queue", handler.NewQueue)
 
 	runtime := config.GetRuntime()
-	log.Debug("Http Listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
+	log.Debug("http listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
 	if err := http.ListenAndServe(runtime.Config.HTTP.ListenAddr, nil); err != nil {
-		log.Error("Failed listening http on %s: %v", runtime.Config.HTTP.ListenAddr, err)
+		log.Error("failed listening http on %s: %v", runtime.Config.HTTP.ListenAddr, err)
 		os.Exit(2)
 	}
 }

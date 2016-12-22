@@ -21,7 +21,7 @@ func main() {
 	// 创建进程pid文件
 	pid, err := pidfile.New(runtime.Config.PidFile)
 	if err != nil {
-		log.Error("Failed to create pidfile: %v", err)
+		log.Error("failed to create pidfile: %v", err)
 		os.Exit(2)
 	}
 	defer pid.Remove()
@@ -30,8 +30,8 @@ func main() {
 		fmt.Println(console.ColorfulText(console.TextCyan, config.WelcomeMessage()))
 	}
 
-	log.Debug("The redis addr: %s", runtime.Config.Redis.Addr)
-	log.Debug("The process ID: %d", os.Getpid())
+	log.Debug("redis addr: %s", runtime.Config.Redis.Addr)
+	log.Debug("process ID: %d", os.Getpid())
 
 	// 信号处理程序，接收退出信号，平滑退出进程
 	signal.InitSignalReceiver()
@@ -40,5 +40,5 @@ func main() {
 	scheduler.Schedule()
 
 	<-runtime.StopHTTPServer
-	log.Debug("All stoped.")
+	log.Debug("all stoped.")
 }

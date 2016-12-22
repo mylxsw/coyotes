@@ -32,11 +32,9 @@ func StartTaskRunner(channel *config.Channel) {
 	go func() {
 		for output := range outputChan {
 			log.Info(
-				"%s%s %s %s %s",
-				console.ColorfulText(console.TextRed, "["+output.ProcessID+"]"),
-				console.ColorfulText(console.TextBlue, "$"),
+				"[%s] %s -> %s",
+				console.ColorfulText(console.TextRed, output.ProcessID),
 				console.ColorfulText(console.TextGreen, output.Name),
-				console.ColorfulText(console.TextMagenta, "->"),
 				console.ColorfulText(console.TextYellow, output.Content),
 			)
 		}

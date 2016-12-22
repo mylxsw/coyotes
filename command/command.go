@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mylxsw/task-runner/console"
 	"github.com/mylxsw/task-runner/log"
 )
 
@@ -36,7 +37,11 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Debug("[%s]Command started: %s", processID, cmdStr)
+	log.Debug(
+		"[%s] command started: %s",
+		console.ColorfulText(console.TextRed, processID),
+		console.ColorfulText(console.TextGreen, cmdStr),
+	)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -58,7 +63,19 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		return err
 	}
 
-	log.Debug("[%s]Command execution success: %s", processID, cmdStr)
+	if cmd.ProcessState.Success() {
+		log.Debug(
+			"[%s] command [%s] execution success",
+			console.ColorfulText(console.TextRed, processID),
+			console.ColorfulText(console.TextGreen, cmdStr),
+		)
+	} else {
+		log.Debug(
+			"[%s] command [%s] execution failed",
+			console.ColorfulText(console.TextRed, processID),
+			console.ColorfulText(console.TextGreen, cmdStr),
+		)
+	}
 
 	return nil
 }
@@ -70,7 +87,12 @@ func (self Command) bindOutput(processID string, name string, input *io.ReadClos
 		line, err := reader.ReadString('\n')
 		if err != nil || io.EOF == err {
 			if err != io.EOF {
-				return fmt.Errorf("[%s]Command execution failed: %s", processID, err)
+				return fmt.Errorf(
+					"[%s] command [%s] execution failed: %s",
+					console.ColorfulText(console.TextRed, processID),
+					console.ColorfulText(console.TextGreen, name),
+					console.ColorfulText(console.TextRed, err.Error()),
+				)
 			}
 			break
 		}
