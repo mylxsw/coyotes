@@ -18,6 +18,12 @@ func init() {
 
 // StartTaskRunner function start a taskRunner instance
 func StartTaskRunner(channel *config.Channel) {
+
+	// 非任务模式自动返回
+	if !runtime.Config.TaskMode {
+		return
+	}
+
 	outputChan := make(chan commander.Output, 20)
 	defer close(outputChan)
 

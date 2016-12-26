@@ -11,11 +11,6 @@ func init() {
 	runtime = config.GetRuntime()
 }
 
-type Task struct {
-	TaskName string `json:"task_name"`
-	Status   int    `json:"status"`
-}
-
 var pushToQueueCmd = redis.NewScript(`
 -- KEYS[1]=队列key
 -- KEYS[2]=去重key

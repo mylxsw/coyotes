@@ -1,4 +1,8 @@
 run:build-mac
+	./bin/task-runner -colorful-tty=true
+run-no-worker:build-mac
+	./bin/task-runner -colorful-tty=true -task-mode=false
+run-redis-230:build-mac
 	./bin/task-runner -colorful-tty=true -host 192.168.1.230:6379
 
 build-mac:
