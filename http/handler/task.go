@@ -26,7 +26,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err := broker.PushTask(taskName, taskChannel, runtime.Channels[taskChannel].Distinct)
+	rs, err := broker.PushTask(taskName, taskChannel)
 	if err != nil {
 		message := fmt.Sprintf("failed push task [%s] to redis queue [%s]: %v", taskName, taskChannel, err)
 		log.Error(message)

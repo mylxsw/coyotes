@@ -11,6 +11,7 @@ import (
 	"github.com/mylxsw/task-runner/scheduler"
 	"github.com/mylxsw/task-runner/signal"
 
+	broker "github.com/mylxsw/task-runner/brokers/redis"
 	server "github.com/mylxsw/task-runner/http"
 )
 
@@ -37,6 +38,9 @@ func main() {
 	signal.InitSignalReceiver()
 
 	go server.StartHTTPServer()
+	go func() {
+		broker.TransferPrepareTask()
+	}()
 	scheduler.Schedule()
 
 	<-runtime.StopHTTPServer

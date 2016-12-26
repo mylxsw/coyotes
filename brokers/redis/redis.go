@@ -12,8 +12,8 @@ func init() {
 }
 
 type Task struct {
-	TaskName string
-	Status   int
+	TaskName string `json:"task_name"`
+	Status   int    `json:"status"`
 }
 
 var pushToQueueCmd = redis.NewScript(`

@@ -6,6 +6,7 @@ const (
 	taskQueueKey     = "%s:tasks:queue"
 	taskQueueExecKey = taskQueueKey + ":exec"
 	taskDistinctKey  = taskQueueKey + ":%s:dis"
+	taskPrepareKey   = "task:prepare:queue"
 )
 
 // TaskQueueKey function return the key for task queue
@@ -21,4 +22,9 @@ func TaskQueueExecKey(channel string) string {
 // TaskQueueDistinctKey function  is used for distinct queue
 func TaskQueueDistinctKey(channel string, command string) string {
 	return fmt.Sprintf(taskDistinctKey, channel, command)
+}
+
+// TaskPrepareQueueKey return the prepare key for queue
+func TaskPrepareQueueKey() string {
+	return taskPrepareKey
 }

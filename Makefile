@@ -1,6 +1,5 @@
 run:build-mac
-	./bin/task-runner -colorful-tty=true
-
+	./bin/task-runner -colorful-tty=true -host 192.168.1.230:6379
 
 build-mac:
 	go build -o bin/task-runner *.go

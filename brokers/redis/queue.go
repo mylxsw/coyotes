@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"encoding/json"
+
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/console"
 	"github.com/mylxsw/task-runner/log"
@@ -17,6 +19,13 @@ type Queue struct {
 	Client  *redis.Client
 }
 
+// PrepareTask is the task that prepared to join queue
+type PrepareTask struct {
+	Name      string `json:"task"`
+	Channel   string `json:"chan"`
+	Timestamp int64  `json:"ts"`
+}
+
 // Create a redis queue
 func Create() *Queue {
 	client := createRedisClient()
@@ -27,7 +36,12 @@ func Create() *Queue {
 }
 
 // PushTask function push a task to queue
-func PushTask(taskName string, channelName string, distinct bool) (interface{}, error) {
+func PushTask(taskName string, channelName string) (interface{}, error) {
+
+	if _, ok := runtime.Channels[channelName]; !ok {
+		return nil, fmt.Errorf("task channel not exist")
+	}
+
 	client := createRedisClient()
 	defer client.Close()
 
@@ -37,7 +51,7 @@ func PushTask(taskName string, channelName string, distinct bool) (interface{}, 
 		client,
 		[]string{TaskQueueKey(channelName), TaskQueueDistinctKey(channelName, taskName)},
 		taskName,
-		distinct,
+		runtime.Channels[channelName].Distinct,
 	).Result()
 }
 
@@ -71,6 +85,24 @@ func QueryTask(channel string) (tasks []Task, err error) {
 	}
 
 	return
+}
+
+// TransferPrepareTask 将prepare队列中的任务加入正式的任务队列
+func TransferPrepareTask() {
+	client := createRedisClient()
+	defer client.Close()
+
+	for {
+		res, err := client.BRPop(2*time.Second, TaskPrepareQueueKey()).Result()
+		if err != nil {
+			continue
+		}
+
+		var task PrepareTask
+		if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
+			PushTask(task.Name, task.Channel)
+		}
+	}
 }
 
 // Close task queue
@@ -129,19 +161,40 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command s
 					distinctKey := TaskQueueDistinctKey(channel.Name, res)
 					execKey := TaskQueueExecKey(channel.Name)
 
-					log.Debug("[%s] clean %s %s ...", console.ColorfulText(console.TextRed, processID), distinctKey, execKey)
+					log.Debug(
+						"[%s] clean %s %s ...",
+						console.ColorfulText(console.TextRed, processID),
+						distinctKey,
+						execKey,
+					)
 
 					err := queue.Client.Del(distinctKey).Err()
 					if err != nil {
-						log.Error("[%s] delete key %s failed: %v", console.ColorfulText(console.TextRed, processID), distinctKey, err)
+						log.Error(
+							"[%s] delete key %s failed: %v",
+							console.ColorfulText(console.TextRed, processID),
+							distinctKey,
+							err,
+						)
 					}
 
 					err = queue.Client.SRem(execKey, res).Err()
 					if err != nil {
-						log.Error("[%s] remove key %s from %s: %v", console.ColorfulText(console.TextRed, processID), res, execKey, err)
+						log.Error(
+							"[%s] remove key %s from %s: %v",
+							console.ColorfulText(console.TextRed, processID),
+							res,
+							execKey,
+							err,
+						)
 					}
 
-					log.Info("[%s] time-consuming %v", console.ColorfulText(console.TextRed, processID), time.Since(startTime))
+					log.Info(
+						"[%s] task [%s] time-consuming %v",
+						console.ColorfulText(console.TextRed, processID),
+						console.ColorfulText(console.TextGreen, res),
+						time.Since(startTime),
+					)
 				}()
 
 				callback(res, processID)

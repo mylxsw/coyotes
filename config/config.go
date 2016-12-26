@@ -89,6 +89,12 @@ func init() {
 				Distinct:    true,
 				WorkerCount: *concurrent,
 			},
+			"cron": &Channel{
+				Name:        "cron",
+				Command:     make(chan string, channelCacheSize),
+				Distinct:    true,
+				WorkerCount: *concurrent,
+			},
 		},
 	}
 
