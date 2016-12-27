@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lunny/log"
+	"github.com/mylxsw/task-runner/log"
 )
 
 // PrepareTask is the task that prepared to join queue
