@@ -14,13 +14,7 @@ func InitSignalReceiver() {
 
 	runtime := config.GetRuntime()
 
-	// 用于向所有channel发送程序退出信号
-	// TODO 新增channel后如何更新该值？
-	runtime.Stoped = make(chan struct{}, len(runtime.Channels))
-	runtime.StopHTTPServer = make(chan struct{})
-	runtime.StopScheduler = make(chan struct{})
-
-	signalChan := make(chan os.Signal)
+	signalChan := make(chan os.Signal, 1)
 	signal.Notify(
 		signalChan,
 		syscall.SIGHUP,
@@ -36,8 +30,8 @@ func InitSignalReceiver() {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
 				log.Debug("Received exit signal, Waiting for exit...")
 
-				for i := 0; i < len(runtime.Channels); i++ {
-					runtime.Stoped <- struct{}{}
+				for _, channel := range runtime.Channels {
+					channel.StopChan <- struct{}{}
 				}
 
 				runtime.StopScheduler <- struct{}{}

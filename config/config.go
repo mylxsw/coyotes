@@ -28,10 +28,11 @@ type Config struct {
 
 // Channel is the command queue
 type Channel struct {
-	Name        string      `json:"name"`
-	Command     chan string `json:"-"`
-	Distinct    bool        `json:"distinct"`
-	WorkerCount int         `json:"worker_count"`
+	Name        string        `json:"name"`
+	Command     chan string   `json:"-"`
+	Distinct    bool          `json:"distinct"`
+	WorkerCount int           `json:"worker_count"`
+	StopChan    chan struct{} `json:"-"`
 }
 
 // Runtime hold global runtime configuration
@@ -84,6 +85,10 @@ func init() {
 		},
 		Channels: make(map[string]*Channel),
 	}
+
+	// 用于向所有channel发送程序退出信号
+	runtime.StopHTTPServer = make(chan struct{})
+	runtime.StopScheduler = make(chan struct{})
 }
 
 // GetRuntime function return a runtime instance

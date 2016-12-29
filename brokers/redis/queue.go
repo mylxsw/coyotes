@@ -42,7 +42,7 @@ func (queue *Queue) Listen(channel *config.Channel) {
 
 	for {
 		select {
-		case <-queue.Runtime.Stoped:
+		case <-channel.StopChan:
 			close(channel.Command)
 			return
 		default:

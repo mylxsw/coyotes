@@ -24,6 +24,11 @@ func StartTaskRunner(channel *config.Channel) {
 		return
 	}
 
+	// 初始化channel关闭chan
+	// 注意：这里最好设置为非堵塞方式，以加快进程退出速度
+	channel.StopChan = make(chan struct{}, 1)
+	defer close(channel.StopChan)
+
 	outputChan := make(chan commander.Output, 20)
 	defer close(outputChan)
 
