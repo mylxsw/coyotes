@@ -1,10 +1,13 @@
 package handler
 
-import "net/http"
-import "strconv"
-import "github.com/mylxsw/task-runner/http/response"
-import "fmt"
-import "github.com/mylxsw/task-runner/scheduler"
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/mylxsw/task-runner/http/response"
+	"github.com/mylxsw/task-runner/scheduler"
+)
 
 // NewQueue function create new a task queue
 func NewQueue(w http.ResponseWriter, r *http.Request) {

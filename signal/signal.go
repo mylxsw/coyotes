@@ -9,8 +9,17 @@ import (
 	"github.com/mylxsw/task-runner/log"
 )
 
-// 初始化信号接受处理程序
+// InitSignalReceiver 初始化信号接受处理程序
 func InitSignalReceiver() {
+
+	runtime := config.GetRuntime()
+
+	// 用于向所有channel发送程序退出信号
+	// TODO 新增channel后如何更新该值？
+	runtime.Stoped = make(chan struct{}, len(runtime.Channels))
+	runtime.StopHTTPServer = make(chan struct{})
+	runtime.StopScheduler = make(chan struct{})
+
 	signalChan := make(chan os.Signal)
 	signal.Notify(
 		signalChan,
@@ -20,7 +29,6 @@ func InitSignalReceiver() {
 		syscall.SIGKILL,
 	)
 	go func() {
-		runtime := config.GetRuntime()
 
 		for {
 			sig := <-signalChan

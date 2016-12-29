@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/lunny/log"
 	broker "github.com/mylxsw/task-runner/brokers/redis"
-	"github.com/mylxsw/task-runner/http/response"
-
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/http/response"
+	"github.com/mylxsw/task-runner/log"
 )
 
 type taskResult struct {

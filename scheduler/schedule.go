@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/task-runner/scheduler/channel"
 	"github.com/mylxsw/task-runner/scheduler/task"
 )
 
@@ -43,11 +45,12 @@ func Schedule() {
 STOP:
 
 	wg.Wait()
+	log.Debug("scheduler stoped.")
 }
 
 // NewQueue 函数用于创建一个新的队列
 func NewQueue(name string, distinct bool, workerCount int) error {
-	channel, err := config.NewChannel(name, distinct, workerCount)
+	channel, err := channel.NewChannel(name, distinct, workerCount)
 	if err != nil {
 		return err
 	}
