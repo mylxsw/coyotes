@@ -37,8 +37,8 @@ func (queue *Queue) Listen(channel *config.Channel) {
 		return
 	}
 
-	log.Debug("queue Listener %s started.", channel.Name)
-	defer log.Debug("queue Listener %s stopped.", channel.Name)
+	log.Debug("queue listener %s started.", channel.Name)
+	defer log.Debug("queue listener %s stopped.", channel.Name)
 
 	for {
 		select {
