@@ -1,3 +1,4 @@
 .idea
 bin/task-runner*
 Makefile.local
+vendor/*
