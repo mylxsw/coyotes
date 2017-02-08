@@ -2,3 +2,4 @@
 bin/task-runner*
 Makefile.local
 vendor/*
+.vscode/*
