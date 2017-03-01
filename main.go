@@ -32,7 +32,7 @@ func main() {
 		fmt.Println(console.ColorfulText(console.TextCyan, config.WelcomeMessage()))
 	}
 
-	log.Debug("redis addr: %s", runtime.Config.Redis.Addr)
+	log.Debug("redis addr: %s/%d", runtime.Config.Redis.Addr, runtime.Config.Redis.DB)
 	log.Debug("process ID: %d", os.Getpid())
 
 	// 初始化所有channel，必须在初始化信号处理之前
