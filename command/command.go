@@ -81,7 +81,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 }
 
 // 绑定标准输入、输出到输出channel
-func (self Command) bindOutput(processID string, name string, input *io.ReadCloser) error {
+func (self *Command) bindOutput(processID string, name string, input *io.ReadCloser) error {
 	reader := bufio.NewReader(*input)
 	for {
 		line, err := reader.ReadString('\n')

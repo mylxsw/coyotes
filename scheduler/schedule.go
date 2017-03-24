@@ -33,11 +33,11 @@ func Schedule() {
 		select {
 		case <-runtime.StopScheduler:
 			goto STOP
-		case channel := <-newQueue:
+		case queueChannel := <-newQueue:
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				task.StartTaskRunner(channel)
+				task.StartTaskRunner(queueChannel)
 			}()
 		}
 	}
@@ -50,11 +50,11 @@ STOP:
 
 // NewQueue 函数用于创建一个新的队列
 func NewQueue(name string, distinct bool, workerCount int) error {
-	channel, err := channel.NewChannel(name, distinct, workerCount)
+	queueChannel, err := channel.NewChannel(name, distinct, workerCount)
 	if err != nil {
 		return err
 	}
-	newQueue <- channel
+	newQueue <- queueChannel
 
 	return nil
 }

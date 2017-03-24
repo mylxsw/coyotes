@@ -27,7 +27,7 @@ type Task struct {
 func PushTask(taskName string, channelName string) (interface{}, error) {
 
 	if _, ok := runtime.Channels[channelName]; !ok {
-		return nil, fmt.Errorf("task channel not exist")
+		return nil, fmt.Errorf("task channel [%s] not exist", channelName)
 	}
 
 	client := createRedisClient()
