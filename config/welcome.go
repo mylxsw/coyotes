@@ -1,13 +1,6 @@
 package config
 
-// WelcomeMessage function print welcome message
-func WelcomeMessage() string {
-
-	if !runtime.Config.ColorfulTTY {
-		return "TaskRunner Started."
-	}
-
-	return `
+var WelcomeMessageStr = `
    ::::::::::::::::::::
       :+:    :+:    :+          TaskRunner v1.0
      +:+    +:+    +:+                                    █
@@ -17,4 +10,13 @@ func WelcomeMessage() string {
  ###    ###    ###     ████████████████████████████████████
 
 `
+
+// WelcomeMessage function print welcome message
+func WelcomeMessage() string {
+
+	if !runtime.Config.ColorfulTTY {
+		return "TaskRunner Started."
+	}
+
+	return WelcomeMessageStr
 }
