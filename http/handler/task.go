@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	broker "github.com/mylxsw/task-runner/brokers/redis"
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/http/response"
-	"github.com/mylxsw/task-runner/log"
+	broker "github.com/mylxsw/coyotes/brokers/redis"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/http/response"
+	"github.com/mylxsw/coyotes/log"
 )
 
 func PushTask(w http.ResponseWriter, r *http.Request) {

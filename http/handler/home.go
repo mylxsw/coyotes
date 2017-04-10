@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/coyotes/config"
 )
 
 func Home(w http.ResponseWriter, r *http.Request) {

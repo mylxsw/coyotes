@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/console"
-	"github.com/mylxsw/task-runner/log"
-	"github.com/mylxsw/task-runner/pidfile"
-	"github.com/mylxsw/task-runner/scheduler"
-	"github.com/mylxsw/task-runner/scheduler/channel"
-	"github.com/mylxsw/task-runner/signal"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/console"
+	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/pidfile"
+	"github.com/mylxsw/coyotes/scheduler"
+	"github.com/mylxsw/coyotes/scheduler/channel"
+	"github.com/mylxsw/coyotes/signal"
 
-	broker "github.com/mylxsw/task-runner/brokers/redis"
-	server "github.com/mylxsw/task-runner/http"
+	broker "github.com/mylxsw/coyotes/brokers/redis"
+	server "github.com/mylxsw/coyotes/http"
 )
 
 var (
@@ -44,7 +44,7 @@ func main() {
 	flag.StringVar(&redisAddrDepressed, "host", "127.0.0.1:6379", "redis连接地址，必须指定端口(depressed,使用redis-host)")
 	flag.StringVar(&redisPasswordDepressed, "password", "", "redis连接密码(depressed,使用redis-password)")
 	flag.StringVar(&httpAddr, "http-addr", "127.0.0.1:60001", "HTTP监控服务监听地址+端口")
-	flag.StringVar(&pidFile, "pidfile", "/tmp/task-runner.pid", "pid文件路径")
+	flag.StringVar(&pidFile, "pidfile", "/tmp/coyotes.pid", "pid文件路径")
 	flag.IntVar(&concurrent, "concurrent", 5, "并发执行线程数")
 	flag.BoolVar(&taskMode, "task-mode", true, "是否启用任务模式，默认启用，关闭则不会执行消费")
 	flag.BoolVar(&colorfulTTY, "colorful-tty", false, "是否启用彩色模式的控制台输出")

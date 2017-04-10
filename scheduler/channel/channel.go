@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	broker "github.com/mylxsw/task-runner/brokers/redis"
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/log"
+	broker "github.com/mylxsw/coyotes/brokers/redis"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // InitChannels init all channels

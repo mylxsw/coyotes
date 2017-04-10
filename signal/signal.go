@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // InitSignalReceiver 初始化信号接受处理程序

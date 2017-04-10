@@ -3,8 +3,8 @@ package redis
 import (
 	"encoding/json"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // GetTaskChannel get a channel from redis

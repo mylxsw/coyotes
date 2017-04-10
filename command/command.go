@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mylxsw/task-runner/console"
-	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/coyotes/console"
+	"github.com/mylxsw/coyotes/log"
 )
 
 type Output struct {

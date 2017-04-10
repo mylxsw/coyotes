@@ -1,24 +1,24 @@
 run:build-mac
-	./bin/task-runner -colorful-tty=true
+	./bin/coyotes -colorful-tty=true
 run-no-worker:build-mac
-	./bin/task-runner -colorful-tty=true -task-mode=false
+	./bin/coyotes -colorful-tty=true -task-mode=false
 run-redis-230:build-mac
-	./bin/task-runner -colorful-tty=true -host 192.168.1.230:6379
+	./bin/coyotes -colorful-tty=true -host 192.168.1.230:6379
 
 build-mac:
-	go build -o bin/task-runner *.go
+	go build -o bin/coyotes *.go
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/task-runner-linux *.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/coyotes-linux *.go
 
 deploy-mac:build-mac
-	cp ./bin/task-runner /usr/local/bin/task-runner
+	cp ./bin/coyotes /usr/local/bin/coyotes
 
 clean-linux:
-	rm -fr ./bin/task-runner-linux
+	rm -fr ./bin/coyotes-linux
 
 clean-mac:
-	rm -fr ./bin/task-runner
+	rm -fr ./bin/coyotes
 
 clean:clean-linux clean-mac
 

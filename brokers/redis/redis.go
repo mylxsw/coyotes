@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/coyotes/config"
 	"gopkg.in/redis.v5"
 )
 

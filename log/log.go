@@ -4,7 +4,7 @@ import (
 	"fmt"
 	syslog "log"
 
-	"github.com/mylxsw/task-runner/console"
+	"github.com/mylxsw/coyotes/console"
 )
 
 const (

@@ -2,10 +2,10 @@ package config
 
 var WelcomeMessageStr = `
    ::::::::::::::::::::
-      :+:    :+:    :+          TaskRunner v1.0
+      :+:    :+:    :+          Coyotes v1.0
      +:+    +:+    +:+                                    █
     +#+    +#++:++#:           Powered by mylxsw          █
-   +#+    +#+    +#+     github.com/mylxsw/task-runner    █
+   +#+    +#+    +#+     github.com/mylxsw/coyotes        █
   #+#    #+#    #+#                                       █
  ###    ###    ###     ████████████████████████████████████
 
@@ -15,7 +15,7 @@ var WelcomeMessageStr = `
 func WelcomeMessage() string {
 
 	if !runtime.Config.ColorfulTTY {
-		return "TaskRunner Started."
+		return "Coyotes Started."
 	}
 
 	return WelcomeMessageStr

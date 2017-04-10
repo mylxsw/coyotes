@@ -3,10 +3,10 @@ package scheduler
 import (
 	"sync"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/log"
-	"github.com/mylxsw/task-runner/scheduler/channel"
-	"github.com/mylxsw/task-runner/scheduler/task"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/scheduler/channel"
+	"github.com/mylxsw/coyotes/scheduler/task"
 )
 
 var newQueue = make(chan *config.Channel, 5)

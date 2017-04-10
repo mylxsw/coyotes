@@ -3,11 +3,11 @@ package task
 import (
 	"sync"
 
-	broker "github.com/mylxsw/task-runner/brokers/redis"
-	commander "github.com/mylxsw/task-runner/command"
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/console"
-	"github.com/mylxsw/task-runner/log"
+	broker "github.com/mylxsw/coyotes/brokers/redis"
+	commander "github.com/mylxsw/coyotes/command"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/console"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // StartTaskRunner function start a taskRunner instance

@@ -3,7 +3,7 @@ package console
 import (
 	"fmt"
 
-	"github.com/mylxsw/task-runner/config"
+	"github.com/mylxsw/coyotes/config"
 )
 
 const (

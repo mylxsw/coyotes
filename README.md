@@ -1,6 +1,6 @@
-# TaskRunner
+# Coyotes
 
-TaskRunner的诞生起源于在使用Laravel的定时任务时，由于PHP本身的限制（不安装线程相关扩展），无法实现并发的任务执行，如果任务执行时间过长，就会影响到其它定时任务的执行。不同于其它重量级任务队列，TaskRunner仅仅提供了对命令行程序执行的支持，这样就避免了开发者需要学习任务队列相关API，针对任务队列开发任务程序的需要。只需要提供一个可执行的文件或者脚本执行命令，TaskRunner就可以并发的执行。
+Coyotes的诞生起源于在使用Laravel的定时任务时，由于PHP本身的限制（不安装线程相关扩展），无法实现并发的任务执行，如果任务执行时间过长，就会影响到其它定时任务的执行。不同于其它重量级任务队列，Coyotes仅仅提供了对命令行程序执行的支持，这样就避免了开发者需要学习任务队列相关API，针对任务队列开发任务程序的需要。只需要提供一个可执行的文件或者脚本执行命令，Coyotes就可以并发的执行。
 
 简单的说，就是“你把命令给我，我来执行，仅此而已”。
 
@@ -34,7 +34,7 @@ TaskRunner的诞生起源于在使用Laravel的定时任务时，由于PHP本身
 
 - **pidfile** string
 
-    pid文件路径 (default "/tmp/task-runner.pid")
+    pid文件路径 (default "/tmp/coyotes.pid")
 
 - **redis-db** int
 
@@ -58,28 +58,28 @@ TaskRunner的诞生起源于在使用Laravel的定时任务时，由于PHP本身
 
     make build-mac
 
-上述命令编译后是当前平台的可执行文件（**./bin/task-runner**）。比如在Mac系统下完成编译后只能在Mac系统下使用，Linux系统下编译则可以在Linux系统下使用。
+上述命令编译后是当前平台的可执行文件（**./bin/coyotes**）。比如在Mac系统下完成编译后只能在Mac系统下使用，Linux系统下编译则可以在Linux系统下使用。
 如果要在Mac系统下编译Linux系统下使用的可执行文件，需要本地先配置好交叉编译选线，之后执行下面的命令完成Linux版本编译
 
     make build-linux
 
 将生成的执行文件（在**bin**目录）复制到系统的`/usr/local/bin`目录即可。
 
-    mv ./bin/task-runner /usr/local/bin/task-runner
+    mv ./bin/coyotes /usr/local/bin/coyotes
 
-项目目录下提供了`supervisor.conf`配置文件可以直接在supervisor下使用，使用supervisor管理TaskRunner进程。TaskRunner在启动之前需要确保Redis服务是可用的。
+项目目录下提供了`supervisor.conf`配置文件可以直接在supervisor下使用，使用supervisor管理Coyotes进程。Coyotes在启动之前需要确保Redis服务是可用的。
 
-    /usr/local/bin/task-runner -redis-host 127.0.0.1:6379 -password REDIS访问密码 
+    /usr/local/bin/coyotes -redis-host 127.0.0.1:6379 -password REDIS访问密码 
 
 如果需要退出进程，需要向进程发送`USR2`信号，以实现平滑退出。
 
-    kill -USR2 $(pgrep task-runner)
+    kill -USR2 $(pgrep coyotes)
 
 > 请不要直接使用`kill -9`终止进程，使用它会强制关闭进程，可能会导致正在执行中的命令被终止，造成任务队列数据不完整。
 
 ## 任务推送方式
 
-将待执行的任务推送给TaskRunner执行有两种方式
+将待执行的任务推送给Coyotes执行有两种方式
 
 - 直接将任务写入到Redis的队列`task:prepare:queue`
 - 使用HTTP API
@@ -94,7 +94,7 @@ TaskRunner的诞生起源于在使用Laravel的定时任务时，由于PHP本身
       'ts'   => time(),
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE))
 
-写入到`task:prepare:queue`之后，TaskRunner会实时的去从中取出任务分发到相应的channel队列供worker消费。
+写入到`task:prepare:queue`之后，Coyotes会实时的去从中取出任务分发到相应的channel队列供worker消费。
 
 ### 使用HTTP API
 
@@ -125,7 +125,7 @@ Response:
 
 ## HTTP API
 
-TaskRunner提供了Restful风格的API用于对其进行管理。
+Coyotes提供了Restful风格的API用于对其进行管理。
 
 [![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/21728c33bdd4b4b703d0)
 

@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mylxsw/task-runner/http/response"
-	"github.com/mylxsw/task-runner/scheduler"
+	"github.com/mylxsw/coyotes/http/response"
+	"github.com/mylxsw/coyotes/scheduler"
 )
 
 // NewQueue function create new a task queue
