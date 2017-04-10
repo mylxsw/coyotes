@@ -1,6 +1,6 @@
 # TaskRunner
 
-![](https://oayrssjpa.qnssl.com/2017-04-10%2011_44_05.gif)
+![](./demo.gif)
 
 ## 命令参数
 
