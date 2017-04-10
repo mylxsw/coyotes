@@ -1,6 +1,6 @@
 # TaskRunner
 
-![](https://oayrssjpa.qnssl.com/2017-04-10%2011_44_05.gif?imageMogr2/auto-orient/thumbnail/1000x1000%3E/blur/1x0/quality/75|imageslim)
+![](https://oayrssjpa.qnssl.com/2017-04-10%2011_44_05.gif)
 
 ## 命令参数
 
