@@ -5,12 +5,6 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-var runtime *config.Runtime
-
-func init() {
-	runtime = config.GetRuntime()
-}
-
 var pushToQueueCmd = redis.NewScript(`
 -- KEYS[1]=队列key
 -- KEYS[2]=去重key

@@ -9,18 +9,13 @@ import (
 	"github.com/mylxsw/task-runner/scheduler/task"
 )
 
-var runtime *config.Runtime
-var newQueue chan *config.Channel
-
-func init() {
-	runtime = config.GetRuntime()
-	newQueue = make(chan *config.Channel, 5)
-}
+var newQueue = make(chan *config.Channel, 5)
 
 // Schedule 函数用于开始任务调度器
 func Schedule() {
 	var wg sync.WaitGroup
 
+	runtime := config.GetRuntime()
 	for index := range runtime.Channels {
 		wg.Add(1)
 		go func(i string) {

@@ -1,6 +1,52 @@
 # TaskRunner
 
-![](https://oayrssjpa.qnssl.com/2016-12-08-14811803808650.jpg)
+![](https://oayrssjpa.qnssl.com/2017-04-10%2011_44_05.gif?imageMogr2/auto-orient/thumbnail/1000x1000%3E/blur/1x0/quality/75|imageslim)
+
+## 命令参数
+
+- **channel-default** string
+
+    默认channel名称，用于消息队列 (default "default")
+
+- **colorful-tty**
+
+    是否启用彩色模式的控制台输出
+
+- **concurrent** int
+
+    并发执行线程数 (default 5)
+
+- **host** string
+
+    redis连接地址，必须指定端口(depressed,使用redis-host) (default "127.0.0.1:6379")
+
+- **http-addr** string
+
+    HTTP监控服务监听地址+端口 (default "127.0.0.1:60001")
+
+- **password** string
+
+    redis连接密码(depressed,使用redis-password)
+
+- **pidfile** string
+
+    pid文件路径 (default "/tmp/task-runner.pid")
+
+- **redis-db** int
+
+    redis默认数据库0-15
+
+- **redis-host** string
+
+    redis连接地址，必须指定端口 (default "127.0.0.1:6379")
+
+- **redis-password** string
+
+    redis连接密码
+
+- **task-mode**
+
+    是否启用任务模式，默认启用，关闭则不会执行消费 (default true)
 
 ## TODO
 

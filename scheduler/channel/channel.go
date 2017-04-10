@@ -9,14 +9,10 @@ import (
 	"github.com/mylxsw/task-runner/log"
 )
 
-var runtime *config.Runtime
-
-func init() {
-	runtime = config.GetRuntime()
-}
-
 // InitChannels init all channels
 func InitChannels() {
+	runtime := config.GetRuntime()
+
 	// 初始化队列channel
 	for key, ch := range GetChannels() {
 		ch.Command = make(chan string, runtime.Config.ChannelCacheSize)
@@ -26,6 +22,8 @@ func InitChannels() {
 
 // GetChannels 获取broker中存储的所有channel
 func GetChannels() map[string]*config.Channel {
+	runtime := config.GetRuntime()
+
 	channels, err := broker.GetTaskChannels()
 	if err != nil {
 		log.Error("get channels failed: %v", err)
@@ -52,6 +50,8 @@ func GetChannels() map[string]*config.Channel {
 
 // NewChannel function create a new channel for task queue
 func NewChannel(name string, distinct bool, workerCount int) (*config.Channel, error) {
+	runtime := config.GetRuntime()
+
 	if name == "" {
 		return nil, fmt.Errorf("队列名称不能为空")
 	}

@@ -17,14 +17,8 @@ const (
 	TextWhite
 )
 
-var runtime *config.Runtime
-
-func init() {
-	runtime = config.GetRuntime()
-}
-
 func ColorfulText(color int, text string) string {
-	if runtime.Config.ColorfulTTY {
+	if config.GetRuntime().Config.ColorfulTTY {
 		return fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", color, text)
 	}
 

@@ -21,7 +21,7 @@ func Create() *Queue {
 	client := createRedisClient()
 	return &Queue{
 		Client:  client,
-		Runtime: runtime,
+		Runtime: config.GetRuntime(),
 	}
 }
 
@@ -32,6 +32,7 @@ func (queue *Queue) Close() {
 
 // Listen to the redis queue
 func (queue *Queue) Listen(channel *config.Channel) {
+
 	// 非任务模式不启用队列监听
 	if !queue.Runtime.Config.TaskMode {
 		return

@@ -10,14 +10,9 @@ import (
 	"github.com/mylxsw/task-runner/log"
 )
 
-var runtime *config.Runtime
-
-func init() {
-	runtime = config.GetRuntime()
-}
-
 // StartTaskRunner function start a taskRunner instance
 func StartTaskRunner(channel *config.Channel) {
+	runtime := config.GetRuntime()
 
 	// 非任务模式自动返回
 	if !runtime.Config.TaskMode {

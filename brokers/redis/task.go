@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/log"
 )
 
@@ -25,7 +26,7 @@ type Task struct {
 
 // PushTask function push a task to queue
 func PushTask(taskName string, channelName string) (interface{}, error) {
-
+	runtime := config.GetRuntime()
 	if _, ok := runtime.Channels[channelName]; !ok {
 		return nil, fmt.Errorf("task channel [%s] not exist", channelName)
 	}
