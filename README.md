@@ -100,39 +100,36 @@ TaskRunner的诞生起源于在使用Laravel的定时任务时，由于PHP本身
 
 Request:
 
-    POST /push HTTP/1.1
-    cache-control: no-cache
-    Postman-Token: 7cb0aa76-0342-481d-bc50-d2c18da7ec31
-    User-Agent: PostmanRuntime/3.0.11-hotfix.2
+    POST /channels/default HTTP/1.1
     Accept: */*
     Host: localhost:60001
-    accept-encoding: gzip, deflate
-    content-type: multipart/form-data; boundary=--------------------------907601575658756243728654
-    content-length: 272
-    Connection: keep-alive
+    content-type: multipart/form-data; boundary=--------------------------019175029883341751119913
+    content-length: 179
     
-    ----------------------------907601575658756243728654
+    ----------------------------019175029883341751119913
     Content-Disposition: form-data; name="task"
     
-    date
-    ----------------------------907601575658756243728654
-    Content-Disposition: form-data; name="channel"
-    
-    biz
-    ----------------------------907601575658756243728654--
+    ping -c 40 baidu.com
+    ----------------------------019175029883341751119913--
+
     
 Response:
     
     HTTP/1.1 200 OK
     Content-Type: application/json; charset=utf-8
-    Date: Mon, 10 Apr 2017 07:29:40 GMT
-    Content-Length: 76
+    Date: Mon, 10 Apr 2017 13:05:56 GMT
+    Content-Length: 92
     
-    {"status_code":200,"message":"ok","data":{"task_name":"date","result":true}}
+    {"status_code":200,"message":"ok","data":{"task_name":"ping -c 40 baidu.com","result":true}}
+
 
 ## HTTP API
 
-### **GET /status** 任务队列状态查询
+TaskRunner提供了Restful风格的API用于对其进行管理。
+
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/21728c33bdd4b4b703d0)
+
+### **GET /channels** 查询所有channel的状态
 
 #### 请求参数
 
@@ -141,32 +138,68 @@ Response:
 #### 响应结果示例
 
     {
-        "status_code": 200,
-        "message": "ok",
-        "data": {
-            "biz": {
-            "tasks": [],
-            "count": 0
-            },
-            "cron": {
-            "tasks": [],
-            "count": 0
-            },
-            "default": {
-            "tasks": [],
-            "count": 0
+      "status_code": 200,
+      "message": "ok",
+      "data": {
+        "biz": {
+          "tasks": [],
+          "count": 0
+        },
+        "cron": {
+          "tasks": [],
+          "count": 0
+        },
+        "default": {
+          "tasks": [
+            {
+              "task_name": "ping -c 40 baidu.com",
+              "channel": "default",
+              "status": "running"
             }
+          ],
+          "count": 1
+        },
+        "test": {
+          "tasks": [],
+          "count": 0
         }
+      }
     }
 
-### **POST /push** 推送任务到任务队列
+任务状态字段`status`对应关系
+
+
+| status | 说明 |
+| --- | --- |
+| expired | 已过期（应该不会出现，待确认）  |
+| queued | 已队列，任务正在等待执行 |
+| running | 任务执行中 |
+
+
+### **GET /channels/{channel_name}** 查新某个channel的状态
+
+#### 请求参数
+
+无
+
+#### 响应结果示例
+
+    {
+      "status_code": 200,
+      "message": "ok",
+      "data": {
+        "tasks": [],
+        "count": 0
+      }
+    }
+
+### **POST /channels/{channel_name}** 推送任务到任务队列
 
 #### 请求参数
 
 | 参数 | 说明 |
 | --- | --- |
 | task | 任务命令，比如`date` |
-| channel | 任务队列名称，默认为default |
 
 #### 响应结果示例
 
@@ -179,7 +212,7 @@ Response:
       }
     }
 
-### **POST /queue** 新建任务队列
+### **POST /channels** 新建任务队列
 
 #### 请求参数
 
@@ -199,16 +232,16 @@ Response:
 
 ## TODO
 
-* [] 解决退出信号会传递到子进程的问题
-* [] 队列channel持久化
-* [*] 支持单个channel的退出
-* [] 排队中的任务取消
-* [] 实现队列调度器
-* [] 使用可选后端记录任务执行结果、任务执行结果回调
-* [] 实现RabbitMQ作为broker的支持
-* [] 队列状态监控
-* [] 集群支持（任务分发，新增队列）
-* [] 支持脚本文件实时分发、执行
-* [] 定时任务执行能力，发送一个任务到队列，设定一个执行时间，时间到了的时候再执行该任务（延迟执行）
+* [x] 解决退出信号会传递到子进程的问题
+* [ ] 队列channel持久化
+* [x] 支持单个channel的退出
+* [ ] 排队中的任务取消
+* [ ] 实现队列调度器
+* [ ] 使用可选后端记录任务执行结果、任务执行结果回调
+* [ ] 实现RabbitMQ作为broker的支持
+* [ ] 队列状态监控
+* [ ] 集群支持（任务分发，新增队列）
+* [ ] 支持脚本文件实时分发、执行
+* [ ] 定时任务执行能力，发送一个任务到队列，设定一个执行时间，时间到了的时候再执行该任务（延迟执行）
 
 

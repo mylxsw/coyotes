@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	broker "github.com/mylxsw/task-runner/brokers/redis"
 	"github.com/mylxsw/task-runner/config"
 	"github.com/mylxsw/task-runner/http/response"
@@ -12,16 +13,15 @@ import (
 
 func PushTask(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponseHeader(w)
-	runtime := config.GetRuntime()
 
 	taskName := r.PostFormValue("task")
-	taskChannel := r.PostFormValue("channel")
+	taskChannel := mux.Vars(r)["channel_name"]
 
 	if taskChannel == "" {
-		taskChannel = runtime.Config.DefaultChannel
+		taskChannel = config.GetRuntime().Config.DefaultChannel
 	}
 
-	if _, ok := runtime.Channels[taskChannel]; !ok {
+	if _, ok := config.GetRuntime().Channels[taskChannel]; !ok {
 		w.Write(response.Failed("channel不存在"))
 		return
 	}

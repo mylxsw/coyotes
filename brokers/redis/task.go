@@ -21,7 +21,7 @@ type PrepareTask struct {
 type Task struct {
 	TaskName string `json:"task_name"`
 	Channel  string `json:"channel"`
-	Status   int    `json:"status"`
+	Status   string `json:"status"`
 }
 
 // PushTask function push a task to queue
@@ -57,10 +57,15 @@ func QueryTask(channel string) (tasks []Task, err error) {
 
 	for _, v := range vals {
 		status, _ := strconv.Atoi(client.Get(TaskQueueDistinctKey(channel, v)).Val())
+		statusName := "queued"
+		if status != 1 {
+			statusName = "expired"
+		}
+
 		tasks = append(tasks, Task{
 			TaskName: v,
 			// 0-去重key已过期，1-队列中
-			Status:  status,
+			Status:  statusName,
 			Channel: channel,
 		})
 	}
@@ -70,7 +75,7 @@ func QueryTask(channel string) (tasks []Task, err error) {
 		tasks = append(tasks, Task{
 			TaskName: v,
 			// 2-执行中
-			Status:  2,
+			Status:  "running",
 			Channel: channel,
 		})
 	}
