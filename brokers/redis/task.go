@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // PrepareTask is the task that prepared to join queue

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mylxsw/task-runner/config"
-	"github.com/mylxsw/task-runner/console"
-	"github.com/mylxsw/task-runner/log"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/console"
+	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
 )
 
