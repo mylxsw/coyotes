@@ -5,11 +5,10 @@ import (
 
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/scheduler/channel"
-	"github.com/mylxsw/coyotes/scheduler/task"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
-var newQueue = make(chan *config.Channel, 5)
+var newQueue = make(chan *brokers.Channel, 5)
 
 // Schedule 函数用于开始任务调度器
 func Schedule() {
@@ -20,7 +19,7 @@ func Schedule() {
 		wg.Add(1)
 		go func(i string) {
 			defer wg.Done()
-			task.StartTaskRunner(runtime.Channels[i])
+			StartTaskRunner(runtime.Channels[i])
 		}(index)
 	}
 
@@ -32,7 +31,7 @@ func Schedule() {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				task.StartTaskRunner(queueChannel)
+				StartTaskRunner(queueChannel)
 			}()
 		}
 	}
@@ -45,7 +44,7 @@ STOP:
 
 // NewQueue 函数用于创建一个新的队列
 func NewQueue(name string, distinct bool, workerCount int) error {
-	queueChannel, err := channel.NewChannel(name, distinct, workerCount)
+	queueChannel, err := NewChannel(name, distinct, workerCount)
 	if err != nil {
 		return err
 	}

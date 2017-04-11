@@ -9,17 +9,18 @@ import (
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 	"github.com/docker/distribution/uuid"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 // encodeTask 用于编码Task对象为json，用于存储到redis
-func encodeTask(task config.Task) string {
+func encodeTask(task brokers.Task) string {
 	taskJSON, _ := json.Marshal(task)
 	return string(taskJSON)
 }
 
 // decodeTask 用于将redis中的json编码转换为Task对象
-func decodeTask(taskJSON string) config.Task {
-	var task config.Task
+func decodeTask(taskJSON string) brokers.Task {
+	var task brokers.Task
 	json.Unmarshal([]byte(taskJSON), &task)
 
 	return task
@@ -31,7 +32,7 @@ func generateUUID() string {
 }
 
 // PushTask 用于将任务加入到Channel
-func PushTask(task config.Task) (interface{}, error) {
+func PushTask(task brokers.Task) (interface{}, error) {
 	runtime := config.GetRuntime()
 	if _, ok := runtime.Channels[task.Channel]; !ok {
 		return nil, fmt.Errorf("task channel [%s] not exist", task.TaskName)
@@ -56,11 +57,11 @@ func PushTask(task config.Task) (interface{}, error) {
 }
 
 // QueryTask function query task queue status
-func QueryTask(channel string) (tasks []config.Task, err error) {
+func QueryTask(channel string) (tasks []brokers.Task, err error) {
 	client := createRedisClient()
 	defer client.Close()
 
-	tasks = []config.Task{}
+	tasks = []brokers.Task{}
 	vals, err := client.LRange(TaskQueueKey(channel), 0, client.LLen(TaskQueueKey(channel)).Val()).Result()
 	if err != nil {
 		return
@@ -100,9 +101,9 @@ func TransferPrepareTask() {
 			continue
 		}
 
-		var task config.PrepareTask
+		var task brokers.PrepareTask
 		if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
-			PushTask(config.Task{
+			PushTask(brokers.Task{
 				TaskName: task.Name,
 				Channel:  task.Channel,
 			})

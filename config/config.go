@@ -1,5 +1,10 @@
 package config
 
+import (
+	"github.com/mylxsw/coyotes/brokers"
+	"time"
+)
+
 // RedisConfig hold redis configuration
 type RedisConfig struct {
 	Addr     string
@@ -24,37 +29,21 @@ type Config struct {
 	ChannelCacheSize int
 }
 
-// PrepareTask is the task that prepared to join queue
-type PrepareTask struct {
-	Name      string `json:"task"`
-	Channel   string `json:"chan"`
-	Timestamp int64  `json:"ts"`
-}
-
-// Task represent a task object
-type Task struct {
-	ID       string `json:"task_id"`
-	TaskName string `json:"task_name"`
-	Channel  string `json:"channel"`
-	Status   string `json:"status"`
-}
-
-// Channel is the command queue
-type Channel struct {
-	Name        string        `json:"name"`
-	Task        chan Task   `json:"-"`
-	Distinct    bool          `json:"distinct"`
-	WorkerCount int           `json:"worker_count"`
-	StopChan    chan struct{} `json:"-"`
+// 进程运行信息
+type Info struct {
+	StartedAt     time.Time // 开始运行时间
+	DealTaskCount int       // 启动以来执行的任务数目
+	SuccTaskCount int       // 成功执行的任务数目
+	FailTaskCount int       // 执行失败的任务数
 }
 
 // Runtime hold global runtime configuration
 type Runtime struct {
 	Config         Config
-	Stoped         chan struct{}
 	StopHTTPServer chan struct{}
 	StopScheduler  chan struct{}
-	Channels       map[string]*Channel
+	Channels       map[string]*brokers.Channel
+	Info           Info
 }
 
 var runtime *Runtime
@@ -97,12 +86,16 @@ func InitRuntime(
 			DefaultChannel:   defaultChannel,
 			ChannelCacheSize: 20,
 		},
-		Channels: make(map[string]*Channel),
+		Channels: make(map[string]*brokers.Channel),
+		Info:     Info{},
 	}
 
 	// 用于向所有channel发送程序退出信号
 	runtime.StopHTTPServer = make(chan struct{})
 	runtime.StopScheduler = make(chan struct{})
+
+	// 进程启动时间
+	runtime.Info.StartedAt = time.Now()
 
 	return runtime
 }

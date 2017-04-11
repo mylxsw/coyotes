@@ -23,18 +23,19 @@ type Command struct {
 }
 
 // 执行命令，绑定输出
-func (self *Command) ExecuteTask(processID string, cmdStr string) error {
+// 返回值（是否成功，错误）
+func (self *Command) ExecuteTask(processID string, cmdStr string) (bool, error) {
 	params := strings.Split(cmdStr, " ")
 	cmd := exec.Command(params[0], params[1:]...)
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	log.Debug(
@@ -43,7 +44,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		console.ColorfulText(console.TextGreen, cmdStr),
 	)
 	if err := cmd.Start(); err != nil {
-		return err
+		return false, err
 	}
 
 	var wg sync.WaitGroup
@@ -60,7 +61,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 	wg.Wait()
 
 	if err := cmd.Wait(); err != nil {
-		return err
+		return false, err
 	}
 
 	if cmd.ProcessState.Success() {
@@ -77,7 +78,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) error {
 		)
 	}
 
-	return nil
+	return cmd.ProcessState.Success(), nil
 }
 
 // 绑定标准输入、输出到输出channel

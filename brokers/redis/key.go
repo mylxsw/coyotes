@@ -10,17 +10,17 @@ const (
 	taskChannelsKey  = "task:channels"
 )
 
-// TaskQueueKey function return the key for task queue
+// TaskQueueKey 返回任务队列的KEY
 func TaskQueueKey(channel string) string {
 	return fmt.Sprintf(taskQueueKey, channel)
 }
 
-// TaskQueueExecKey function return the key for the queue in execution
+// TaskQueueExecKey 返回执行中的任务队列KEY
 func TaskQueueExecKey(channel string) string {
 	return fmt.Sprintf(taskQueueExecKey, channel)
 }
 
-// TaskQueueDistinctKey function  is used for distinct queue
+// TaskQueueDistinctKey 返回任务的去重KEY
 func TaskQueueDistinctKey(channel string, command string) string {
 	return fmt.Sprintf(taskDistinctKey, channel, command)
 }
@@ -30,7 +30,7 @@ func TaskPrepareQueueKey() string {
 	return taskPrepareKey
 }
 
-// TaskChannelsKey return the key for channels storage
+// TaskChannelsKey 返回所有channel信息存储的KEY
 func TaskChannelsKey() string {
 	return taskChannelsKey
 }

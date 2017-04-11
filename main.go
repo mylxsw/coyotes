@@ -10,7 +10,6 @@ import (
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/pidfile"
 	"github.com/mylxsw/coyotes/scheduler"
-	"github.com/mylxsw/coyotes/scheduler/channel"
 	"github.com/mylxsw/coyotes/signal"
 
 	broker "github.com/mylxsw/coyotes/brokers/redis"
@@ -82,7 +81,7 @@ func main() {
 	log.Debug("process ID: %d", os.Getpid())
 
 	// 初始化所有channel，必须在初始化信号处理之前
-	channel.InitChannels()
+	scheduler.InitChannels()
 	// 信号处理程序，接收退出信号，平滑退出进程
 	signal.InitSignalReceiver()
 

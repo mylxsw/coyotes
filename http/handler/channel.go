@@ -11,10 +11,11 @@ import (
 	"github.com/mylxsw/coyotes/http/response"
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/scheduler"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 type taskResult struct {
-	Tasks []config.Task `json:"tasks"`
+	Tasks []brokers.Task `json:"tasks"`
 	Count int           `json:"count"`
 }
 
@@ -83,7 +84,7 @@ func NewChannel(w http.ResponseWriter, r *http.Request) {
 func RemoveChannel(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponseHeader(w)
 
-	err := broker.RemoveTaskChannel(mux.Vars(r)["channel_name"])
+	err := broker.RemoveChannel(mux.Vars(r)["channel_name"])
 	if err != nil {
 		w.Write(response.Failed(fmt.Sprintf("删除失败：%v", err)))
 		return

@@ -1,13 +1,18 @@
 package config
 
+// 当前版本
+const VERSION  = "v1.0";
+
 var WelcomeMessageStr = `
-   ::::::::::::::::::::
-      :+:    :+:    :+          Coyotes v1.0
-     +:+    +:+    +:+                                    █
-    +#+    +#++:++#:           Powered by mylxsw          █
-   +#+    +#+    +#+     github.com/mylxsw/coyotes        █
-  #+#    #+#    #+#                                       █
- ###    ###    ###     ████████████████████████████████████
+  ____                  _
+ / ___|___  _   _  ___ | |_ ___  ___
+| |   / _ \| | | |/ _ \| __/ _ \/ __|
+| |__| (_) | |_| | (_) | ||  __/\__ \
+ \____\___/ \__, |\___/ \__\___||___/ ` + VERSION + `
+            |___/
+
+        ❉ Powered by mylxsw ❉
+      github.com/mylxsw/coyotes
 
 `
 
@@ -15,7 +20,7 @@ var WelcomeMessageStr = `
 func WelcomeMessage() string {
 
 	if !runtime.Config.ColorfulTTY {
-		return "Coyotes Started."
+		return "coyotes " + VERSION + " started."
 	}
 
 	return WelcomeMessageStr

@@ -8,6 +8,7 @@ import (
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 // Queue is the queue object for redis broker
@@ -31,7 +32,7 @@ func (queue *Queue) Close() {
 }
 
 // Listen to the redis queue
-func (queue *Queue) Listen(channel *config.Channel) {
+func (queue *Queue) Listen(channel *brokers.Channel) {
 
 	// 非任务模式不启用队列监听
 	if !queue.Runtime.Config.TaskMode {
@@ -62,7 +63,7 @@ func (queue *Queue) Listen(channel *config.Channel) {
 }
 
 // Work function consuming the queue
-func (queue *Queue) Work(i int, channel *config.Channel, callback func(command config.Task, processID string)) {
+func (queue *Queue) Work(i int, channel *brokers.Channel, callback func(command brokers.Task, processID string) bool) {
 	processID := fmt.Sprintf("%s %d", channel.Name, i)
 
 	log.Debug("task customer [%s] started.", console.ColorfulText(console.TextRed, processID))
@@ -75,12 +76,22 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command c
 				return
 			}
 
-			func(task config.Task) {
+			func(task brokers.Task) {
 
 				startTime := time.Now()
+				// 执行结果，默认为false，失败
+				isSuccess := false
 
 				// 删除用于去重的缓存key
 				defer func() {
+
+					// 统计任务执行结果
+					if isSuccess {
+						config.IncrSuccTaskCount()
+					} else {
+						config.IncrFailTaskCount()
+					}
+
 					distinctKey := TaskQueueDistinctKey(channel.Name, task.TaskName)
 					execKey := TaskQueueExecKey(channel.Name)
 
@@ -120,7 +131,9 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command c
 					)
 				}()
 
-				callback(task, processID)
+				if callback(task, processID) {
+					isSuccess = true
+				}
 			}(task)
 		}
 	}

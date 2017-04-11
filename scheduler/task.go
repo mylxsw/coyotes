@@ -1,4 +1,4 @@
-package task
+package scheduler
 
 import (
 	"sync"
@@ -8,10 +8,11 @@ import (
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 // StartTaskRunner function start a taskRunner instance
-func StartTaskRunner(channel *config.Channel) {
+func StartTaskRunner(channel *brokers.Channel) {
 	runtime := config.GetRuntime()
 
 	// 非任务模式自动返回
@@ -58,11 +59,12 @@ func StartTaskRunner(channel *config.Channel) {
 		go func(i int) {
 			defer wg.Done()
 
-			queue.Work(i, channel, func(task config.Task, processID string) {
+			queue.Work(i, channel, func(task brokers.Task, processID string) bool {
 				cmder := &commander.Command{
 					Output: outputChan,
 				}
-				cmder.ExecuteTask(processID, task.TaskName)
+				status, _ := cmder.ExecuteTask(processID, task.TaskName)
+				return status
 			})
 		}(index)
 	}

@@ -1,4 +1,4 @@
-package channel
+package scheduler
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 // InitChannels init all channels
@@ -15,13 +16,13 @@ func InitChannels() {
 
 	// 初始化队列channel
 	for key, ch := range GetChannels() {
-		ch.Task = make(chan config.Task, runtime.Config.ChannelCacheSize)
+		ch.Task = make(chan brokers.Task, runtime.Config.ChannelCacheSize)
 		runtime.Channels[key] = ch
 	}
 }
 
 // GetChannels 获取broker中存储的所有channel
-func GetChannels() map[string]*config.Channel {
+func GetChannels() map[string]*brokers.Channel {
 	runtime := config.GetRuntime()
 
 	channels, err := broker.GetTaskChannels()
@@ -36,20 +37,20 @@ func GetChannels() map[string]*config.Channel {
 			continue
 		}
 
-		channels[ch] = &config.Channel{
+		channels[ch] = &brokers.Channel{
 			Name:        ch,
 			Distinct:    true,
 			WorkerCount: runtime.Config.Concurrent,
 		}
 
-		broker.AddTaskChannel(channels[ch])
+		broker.AddChannel(channels[ch])
 	}
 
 	return channels
 }
 
 // NewChannel function create a new channel for task queue
-func NewChannel(name string, distinct bool, workerCount int) (*config.Channel, error) {
+func NewChannel(name string, distinct bool, workerCount int) (*brokers.Channel, error) {
 	runtime := config.GetRuntime()
 
 	if name == "" {
@@ -59,9 +60,9 @@ func NewChannel(name string, distinct bool, workerCount int) (*config.Channel, e
 		return nil, fmt.Errorf("任务队列 %s 已经存在", name)
 	}
 
-	channel := &config.Channel{
+	channel := &brokers.Channel{
 		Name:        name,
-		Task:        make(chan config.Task, runtime.Config.ChannelCacheSize),
+		Task:        make(chan brokers.Task, runtime.Config.ChannelCacheSize),
 		Distinct:    distinct,
 		WorkerCount: workerCount,
 	}
@@ -72,7 +73,7 @@ func NewChannel(name string, distinct bool, workerCount int) (*config.Channel, e
 
 	runtime.Channels[name] = channel
 	// 将channel加入到broker存储，用于持久化
-	broker.AddTaskChannel(channel)
+	broker.AddChannel(channel)
 
 	return channel, nil
 }

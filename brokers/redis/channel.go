@@ -3,12 +3,12 @@ package redis
 import (
 	"encoding/json"
 
-	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
-// GetTaskChannel get a channel from redis
-func GetTaskChannel(channelName string) (channel config.Channel, err error) {
+// GetTaskChannel 从Redis中查询某个channel信息
+func GetTaskChannel(channelName string) (channel brokers.Channel, err error) {
 	client := createRedisClient()
 	defer client.Close()
 
@@ -26,9 +26,9 @@ func GetTaskChannel(channelName string) (channel config.Channel, err error) {
 	return
 }
 
-// GetTaskChannels return all channels
-func GetTaskChannels() (channels map[string]*config.Channel, err error) {
-	channels = make(map[string]*config.Channel)
+// GetTaskChannels 返回偶有的channel信息
+func GetTaskChannels() (channels map[string]*brokers.Channel, err error) {
+	channels = make(map[string]*brokers.Channel)
 
 	client := createRedisClient()
 	defer client.Close()
@@ -39,7 +39,7 @@ func GetTaskChannels() (channels map[string]*config.Channel, err error) {
 	}
 
 	for key, res := range results {
-		channel := config.Channel{}
+		channel := brokers.Channel{}
 		err = json.Unmarshal([]byte(res), &channel)
 		if err != nil {
 			log.Error("parse channel [%s] from json to object failed", key)
@@ -52,8 +52,8 @@ func GetTaskChannels() (channels map[string]*config.Channel, err error) {
 	return
 }
 
-// AddTaskChannel add a channel to redis for persistence
-func AddTaskChannel(channel *config.Channel) error {
+// AddChannel 新增一个channel，会持久化到Redis中
+func AddChannel(channel *brokers.Channel) error {
 	client := createRedisClient()
 	defer client.Close()
 
@@ -70,8 +70,8 @@ func AddTaskChannel(channel *config.Channel) error {
 	return nil
 }
 
-// RemoveTaskChannel remove a channel from redis
-func RemoveTaskChannel(channelName string) error {
+// RemoveChannel 从Redis中移除channel
+func RemoveChannel(channelName string) error {
 	client := createRedisClient()
 	defer client.Close()
 
