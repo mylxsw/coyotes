@@ -15,7 +15,7 @@ func InitChannels() {
 
 	// 初始化队列channel
 	for key, ch := range GetChannels() {
-		ch.Command = make(chan string, runtime.Config.ChannelCacheSize)
+		ch.Task = make(chan config.Task, runtime.Config.ChannelCacheSize)
 		runtime.Channels[key] = ch
 	}
 }
@@ -61,7 +61,7 @@ func NewChannel(name string, distinct bool, workerCount int) (*config.Channel, e
 
 	channel := &config.Channel{
 		Name:        name,
-		Command:     make(chan string, runtime.Config.ChannelCacheSize),
+		Task:        make(chan config.Task, runtime.Config.ChannelCacheSize),
 		Distinct:    distinct,
 		WorkerCount: workerCount,
 	}

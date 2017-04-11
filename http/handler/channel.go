@@ -3,16 +3,18 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/http/response"
 	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/scheduler"
 )
 
 type taskResult struct {
-	Tasks []broker.Task `json:"tasks"`
+	Tasks []config.Task `json:"tasks"`
 	Count int           `json:"count"`
 }
 
@@ -54,4 +56,40 @@ func StatusChannels(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response.Success(results))
+}
+
+// NewChannel function create new a task queue
+func NewChannel(w http.ResponseWriter, r *http.Request) {
+	response.SendJSONResponseHeader(w)
+
+	name := r.PostFormValue("name")
+	distinct := r.PostFormValue("distinct") == "true"
+	workerCount, err := strconv.Atoi(r.PostFormValue("worker"))
+	if err != nil {
+		w.Write(response.Failed(fmt.Sprintf("字段workerCount不合法: %v", err)))
+		return
+	}
+
+	err = scheduler.NewQueue(name, distinct, workerCount)
+	if err != nil {
+		w.Write(response.Failed(err.Error()))
+		return
+	}
+
+	w.Write(response.Success(nil))
+}
+
+// RemoveChannel remove the spectified channel
+func RemoveChannel(w http.ResponseWriter, r *http.Request) {
+	response.SendJSONResponseHeader(w)
+
+	err := broker.RemoveTaskChannel(mux.Vars(r)["channel_name"])
+	if err != nil {
+		w.Write(response.Failed(fmt.Sprintf("删除失败：%v", err)))
+		return
+	}
+
+	// TODO 需要检查channel中是否有task，是否有task在执行，以及关闭启动的worker
+
+	w.Write(response.Success(nil))
 }

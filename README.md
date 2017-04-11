@@ -193,7 +193,7 @@ Coyotes提供了Restful风格的API用于对其进行管理。
       }
     }
 
-### **POST /channels/{channel_name}** 推送任务到任务队列
+### **POST /channels/{channel_name}/tasks** 推送任务到任务队列
 
 #### 请求参数
 

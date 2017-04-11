@@ -11,6 +11,15 @@ import (
 	"github.com/mylxsw/coyotes/log"
 )
 
+func RemoveTask(w http.ResponseWriter, r *http.Request) {
+	response.SendJSONResponseHeader(w)
+
+	// vars := mux.Vars(r)
+	// channelName := vars["channel_name"]
+	// taskName := vars["task_id"]
+
+}
+
 func PushTask(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponseHeader(w)
 
@@ -26,7 +35,10 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err := broker.PushTask(taskName, taskChannel)
+	rs, err := broker.PushTask(config.Task{
+		TaskName: taskName,
+		Channel:  taskChannel,
+	})
 	if err != nil {
 		message := fmt.Sprintf("failed push task [%s] to redis queue [%s]: %v", taskName, taskChannel, err)
 		log.Error(message)

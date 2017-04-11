@@ -18,14 +18,19 @@ func StartHTTPServer() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", handler.Home).Methods("GET")
+
 	// 查看所有channel的状态
 	r.HandleFunc("/channels", handler.StatusChannels).Methods("GET")
 	// 创建新的channel
-	r.HandleFunc("/channels", handler.NewQueue).Methods("POST")
+	r.HandleFunc("/channels", handler.NewChannel).Methods("POST")
 	// 查看某个channel的状态
 	r.HandleFunc("/channels/{channel_name}", handler.StatusChannel).Methods("GET")
+	// 删除某个channel
+	r.HandleFunc("/channels/{channel_name}", handler.RemoveChannel).Methods("DELETE")
+
 	// 推送新的task到channel
-	r.HandleFunc("/channels/{channel_name}", handler.PushTask).Methods("POST")
+	r.HandleFunc("/channels/{channel_name}/tasks", handler.PushTask).Methods("POST")
+	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", handler.RemoveTask).Methods("DELETE")
 
 	log.Debug("http listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
 

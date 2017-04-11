@@ -58,11 +58,11 @@ func StartTaskRunner(channel *config.Channel) {
 		go func(i int) {
 			defer wg.Done()
 
-			queue.Work(i, channel, func(cmd string, processID string) {
+			queue.Work(i, channel, func(task config.Task, processID string) {
 				cmder := &commander.Command{
 					Output: outputChan,
 				}
-				cmder.ExecuteTask(processID, cmd)
+				cmder.ExecuteTask(processID, task.TaskName)
 			})
 		}(index)
 	}

@@ -44,7 +44,7 @@ func (queue *Queue) Listen(channel *config.Channel) {
 	for {
 		select {
 		case <-channel.StopChan:
-			close(channel.Command)
+			close(channel.Task)
 			return
 		default:
 			res, err := queue.Client.BRPop(2*time.Second, TaskQueueKey(channel.Name)).Result()
@@ -52,15 +52,17 @@ func (queue *Queue) Listen(channel *config.Channel) {
 				continue
 			}
 
-			queue.Client.SAdd(TaskQueueExecKey(channel.Name), res[1])
-			channel.Command <- res[1]
+			task := decodeTask(res[1])
+
+			queue.Client.HSet(TaskQueueExecKey(channel.Name), task.ID, res[1])
+			channel.Task <- task
 		}
 
 	}
 }
 
 // Work function consuming the queue
-func (queue *Queue) Work(i int, channel *config.Channel, callback func(command string, processID string)) {
+func (queue *Queue) Work(i int, channel *config.Channel, callback func(command config.Task, processID string)) {
 	processID := fmt.Sprintf("%s %d", channel.Name, i)
 
 	log.Debug("task customer [%s] started.", console.ColorfulText(console.TextRed, processID))
@@ -68,18 +70,18 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command s
 
 	for {
 		select {
-		case res, ok := <-channel.Command:
+		case task, ok := <-channel.Task:
 			if !ok {
 				return
 			}
 
-			func(res string) {
+			func(task config.Task) {
 
 				startTime := time.Now()
 
 				// 删除用于去重的缓存key
 				defer func() {
-					distinctKey := TaskQueueDistinctKey(channel.Name, res)
+					distinctKey := TaskQueueDistinctKey(channel.Name, task.TaskName)
 					execKey := TaskQueueExecKey(channel.Name)
 
 					log.Debug(
@@ -99,12 +101,12 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command s
 						)
 					}
 
-					err = queue.Client.SRem(execKey, res).Err()
+					err = queue.Client.HDel(execKey, task.ID).Err()
 					if err != nil {
 						log.Error(
 							"[%s] remove key %s from %s: %v",
 							console.ColorfulText(console.TextRed, processID),
-							res,
+							task.TaskName,
 							execKey,
 							err,
 						)
@@ -113,13 +115,13 @@ func (queue *Queue) Work(i int, channel *config.Channel, callback func(command s
 					log.Info(
 						"[%s] task [%s] time-consuming %v",
 						console.ColorfulText(console.TextRed, processID),
-						console.ColorfulText(console.TextGreen, res),
+						console.ColorfulText(console.TextGreen, task.TaskName),
 						time.Since(startTime),
 					)
 				}()
 
-				callback(res, processID)
-			}(res)
+				callback(task, processID)
+			}(task)
 		}
 	}
 }

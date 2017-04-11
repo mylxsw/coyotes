@@ -1,12 +1,16 @@
-hash: d205e37731a65c4c6b1c803c2d1ae086e35eacc51e2ccd38937dfaf0b14c2b5c
-updated: 2017-01-04T23:48:59.556132898+08:00
+hash: cd09685deef84a3b9dcf82ad7fff3ff97cda512f7df90a600b4f1120c7244bcb
+updated: 2017-04-11T12:46:32.490893009+08:00
 imports:
+- name: github.com/docker/distribution
+  version: a25b9ef0c9fe242ac04bb20d3a028442b7d266b6
+  subpackages:
+  - uuid
 - name: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+  version: 14f550f51af52180c2eefed15e5fd18d63c0a64a
 - name: github.com/gorilla/mux
-  version: 0eeaf8392f5b04950925b8a69fe70f110fa7cbfc
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
 - name: gopkg.in/redis.v5
-  version: b9cc17bae020d9c1f467ca0f27d7706c1683c370
+  version: a16aeec10ff407b1e7be6dd35797ccf5426ef0f0
   subpackages:
   - internal
   - internal/consistenthash
