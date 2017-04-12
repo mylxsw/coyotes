@@ -3,9 +3,10 @@ package handler
 import (
 	"net/http"
 
-	"github.com/mylxsw/coyotes/config"
 	"html/template"
 	"strconv"
+
+	"github.com/mylxsw/coyotes/config"
 )
 
 const htmlTemplate = `
@@ -87,7 +88,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		Welcome string
 		Items   map[string]string
 	}{
-		Welcome: config.WelcomeMessage(),
+		Welcome: config.WelcomeMessageStr,
 		Items: map[string]string{
 			"版本":     config.VERSION,
 			"启动时间":   runtime.Info.StartedAt.Format("2006-01-02 15:04:05"),

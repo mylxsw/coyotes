@@ -1,6 +1,5 @@
 .idea
-bin/task-runner*
-bin/coyotes*
 Makefile.local
 vendor/*
 .vscode/*
+debug

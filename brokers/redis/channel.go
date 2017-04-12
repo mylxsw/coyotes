@@ -3,8 +3,8 @@ package redis
 import (
 	"encoding/json"
 
-	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // GetTaskChannel 从Redis中查询某个channel信息
