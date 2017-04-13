@@ -38,9 +38,9 @@ func (manager *TaskManager) Close() {
 }
 
 // PushTask 用于将任务加入到Channel
-func (manager *TaskManager) PushTask(task brokers.Task) (interface{}, error) {
+func (manager *TaskManager) PushTask(task brokers.Task) (id string, existence bool, err error) {
 	if _, ok := manager.runtime.Channels[task.Channel]; !ok {
-		return nil, fmt.Errorf("task channel [%s] not exist", task.TaskName)
+		return "", false, fmt.Errorf("task channel [%s] not exist", task.TaskName)
 	}
 
 	//  如果没有指定任务ID，则自动生成
@@ -50,12 +50,18 @@ func (manager *TaskManager) PushTask(task brokers.Task) (interface{}, error) {
 
 	log.Info("add task: %s -> %s", task.TaskName, task.Channel)
 
-	return pushToQueueCmd.Run(
+	val, err := pushToQueueCmd.Run(
 		manager.client,
 		[]string{TaskQueueKey(task.Channel), TaskQueueDistinctKey(task.Channel, task.TaskName)},
 		encodeTask(task),
 		manager.runtime.Channels[task.Channel].Distinct,
 	).Result()
+
+	if err != nil {
+		return "", false, err
+	}
+
+	return task.ID, int64(val.(int64)) != 1, nil
 }
 
 // QueryTask function query task queue status
@@ -155,6 +161,44 @@ func (manager *TaskManager) RemoveChannel(channelName string) error {
 	return nil
 }
 
+// MigrateDelayTask 迁移延时任务到执行队列
+func (manager *TaskManager) MigrateDelayTask() {
+	res, err := popDelayTasks.Run(
+		manager.client,
+		[]string{TaskDelayQueueKey()},
+		time.Now().Format("20060102150405"),
+	).Result()
+
+	if err != nil {
+		log.Warning("query delay task failed: %v", err)
+		return
+	}
+
+	for _, t := range res.([]interface{}) {
+
+		tk := decodeTask(t.(string))
+		_, existence, err := GetTaskManager().PushTask(tk)
+
+		if err != nil {
+			log.Error("add task %s failed: %v", tk.ID, err)
+			continue
+		}
+
+		res := "add"
+		if existence {
+			res = "repeat"
+		}
+		log.Debug("add delay task %s to channel %s: %s", tk.ID, tk.Channel, res)
+	}
+}
+
+// StartDelayTaskLifeCycle 启动延时任务迁移
+func StartDelayTaskLifeCycle() {
+	for {
+		time.Sleep(time.Second)
+		GetTaskManager().MigrateDelayTask()
+	}
+}
 
 // encodeTask 用于编码Task对象为json，用于存储到redis
 func encodeTask(task brokers.Task) string {

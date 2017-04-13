@@ -5,6 +5,19 @@ import (
 	"gopkg.in/redis.v5"
 )
 
+var popDelayTasks = redis.NewScript(`
+-- KEYS[1]=延迟任务集合key
+-- ARGV[1]=当前时间
+
+local tasks = redis.call("zrangebyscore", KEYS[1], 0, ARGV[1], "limit", 0, 10)
+
+if #tasks > 0 then
+    redis.call("zrem", KEYS[1], unpack(tasks))
+end
+
+return tasks
+`)
+
 var pushToQueueCmd = redis.NewScript(`
 -- KEYS[1]=队列key
 -- KEYS[2]=去重key

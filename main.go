@@ -91,6 +91,9 @@ func main() {
 	go func() {
 		broker.TransferPrepareTask()
 	}()
+	go func() {
+		broker.StartDelayTaskLifeCycle()
+	}()
 	scheduler.Schedule()
 
 	<-runtime.StopHTTPServer
