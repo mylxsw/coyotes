@@ -33,7 +33,7 @@ func StartTaskRunner(channel *brokers.Channel) {
 	// 	os.Exit(2)
 	// }
 
-	queue := broker.CreateTaskChannel()
+	queue := broker.CreateTaskChannel(channel)
 	defer queue.Close()
 
 	go func() {
@@ -52,14 +52,14 @@ func StartTaskRunner(channel *brokers.Channel) {
 
 	go func() {
 		defer wg.Done()
-		queue.Listen(channel)
+		queue.Listen()
 	}()
 
 	for index := 0; index < channel.WorkerCount; index++ {
 		go func(i int) {
 			defer wg.Done()
 
-			queue.Work(i, channel, func(task brokers.Task, processID string) bool {
+			queue.Work(i, func(task brokers.Task, processID string) bool {
 				cmder := &commander.Command{
 					Output: outputChan,
 				}

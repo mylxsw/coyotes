@@ -15,14 +15,16 @@ import (
 type TaskChannel struct {
 	Runtime *config.Runtime
 	Client  *redis.Client
+	Channel *brokers.Channel
 }
 
 // CreateTaskChannel create a redis queue
-func CreateTaskChannel() *TaskChannel {
+func CreateTaskChannel(channel *brokers.Channel) *TaskChannel {
 	client := createRedisClient()
 	return &TaskChannel{
 		Client:  client,
 		Runtime: config.GetRuntime(),
+		Channel: channel,
 	}
 }
 
@@ -32,46 +34,46 @@ func (queue *TaskChannel) Close() {
 }
 
 // Listen to the redis queue
-func (queue *TaskChannel) Listen(channel *brokers.Channel) {
+func (queue *TaskChannel) Listen() {
 
 	// 非任务模式不启用队列监听
 	if !queue.Runtime.Config.TaskMode {
 		return
 	}
 
-	log.Debug("queue listener %s started.", channel.Name)
-	defer log.Debug("queue listener %s stopped.", channel.Name)
+	log.Debug("listener %s started.", queue.Channel.Name)
+	defer log.Debug("listener %s stopped.", queue.Channel.Name)
 
 	for {
 		select {
-		case <-channel.StopChan:
-			close(channel.Task)
+		case <-queue.Channel.StopChan:
+			close(queue.Channel.Task)
 			return
 		default:
-			res, err := queue.Client.BRPop(2*time.Second, TaskQueueKey(channel.Name)).Result()
+			res, err := queue.Client.BRPop(2*time.Second, TaskQueueKey(queue.Channel.Name)).Result()
 			if err != nil {
 				continue
 			}
 
 			task := decodeTask(res[1])
 
-			queue.Client.HSet(TaskQueueExecKey(channel.Name), task.ID, res[1])
-			channel.Task <- task
+			queue.Client.HSet(TaskQueueExecKey(queue.Channel.Name), task.ID, res[1])
+			queue.Channel.Task <- task
 		}
 
 	}
 }
 
 // Work function consuming the queue
-func (queue *TaskChannel) Work(i int, channel *brokers.Channel, callback func(command brokers.Task, processID string) bool) {
-	processID := fmt.Sprintf("%s %d", channel.Name, i)
+func (queue *TaskChannel) Work(i int, callback func(command brokers.Task, processID string) bool) {
+	processID := fmt.Sprintf("%s %d", queue.Channel.Name, i)
 
-	log.Debug("task customer [%s] started.", console.ColorfulText(console.TextRed, processID))
-	defer log.Debug("task customer [%s] stopped.", console.ColorfulText(console.TextRed, processID))
+	log.Debug("worker [%s] started.", console.ColorfulText(console.TextRed, processID))
+	defer log.Debug("worker [%s] stopped.", console.ColorfulText(console.TextRed, processID))
 
 	for {
 		select {
-		case task, ok := <-channel.Task:
+		case task, ok := <-queue.Channel.Task:
 			if !ok {
 				return
 			}
@@ -92,8 +94,8 @@ func (queue *TaskChannel) Work(i int, channel *brokers.Channel, callback func(co
 						config.IncrFailTaskCount()
 					}
 
-					distinctKey := TaskQueueDistinctKey(channel.Name, task.TaskName)
-					execKey := TaskQueueExecKey(channel.Name)
+					distinctKey := TaskQueueDistinctKey(queue.Channel.Name, task.TaskName)
+					execKey := TaskQueueExecKey(queue.Channel.Name)
 
 					log.Debug(
 						"[%s] clean %s %s ...",
