@@ -25,7 +25,7 @@ func InitChannels() {
 func GetChannels() map[string]*brokers.Channel {
 	runtime := config.GetRuntime()
 
-	channels, err := broker.GetTaskChannels()
+	channels, err := broker.GetTaskManager().GetTaskChannels()
 	if err != nil {
 		log.Error("get channels failed: %v", err)
 		os.Exit(2)
@@ -43,7 +43,7 @@ func GetChannels() map[string]*brokers.Channel {
 			WorkerCount: runtime.Config.Concurrent,
 		}
 
-		broker.AddChannel(channels[ch])
+		broker.GetTaskManager().AddChannel(channels[ch])
 	}
 
 	return channels
@@ -73,7 +73,7 @@ func NewChannel(name string, distinct bool, workerCount int) (*brokers.Channel, 
 
 	runtime.Channels[name] = channel
 	// 将channel加入到broker存储，用于持久化
-	broker.AddChannel(channel)
+	broker.GetTaskManager().AddChannel(channel)
 
 	return channel, nil
 }

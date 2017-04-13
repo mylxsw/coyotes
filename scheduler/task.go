@@ -3,12 +3,12 @@ package scheduler
 import (
 	"sync"
 
+	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	commander "github.com/mylxsw/coyotes/command"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 // StartTaskRunner function start a taskRunner instance
@@ -33,7 +33,7 @@ func StartTaskRunner(channel *brokers.Channel) {
 	// 	os.Exit(2)
 	// }
 
-	queue := broker.Create()
+	queue := broker.CreateTaskChannel()
 	defer queue.Close()
 
 	go func() {

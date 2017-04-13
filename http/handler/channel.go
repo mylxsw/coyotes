@@ -6,24 +6,24 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/http/response"
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/scheduler"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 type taskResult struct {
 	Tasks []brokers.Task `json:"tasks"`
-	Count int           `json:"count"`
+	Count int            `json:"count"`
 }
 
 // StatusChannel 查询单个Channel的任务
 func StatusChannel(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponseHeader(w)
 
-	tasks, err := broker.QueryTask(mux.Vars(r)["channel_name"])
+	tasks, err := broker.GetTaskManager().QueryTask(mux.Vars(r)["channel_name"])
 	if err != nil {
 		message := fmt.Sprintf("ERROR: %v", err)
 		log.Error(message)
@@ -43,7 +43,7 @@ func StatusChannels(w http.ResponseWriter, r *http.Request) {
 
 	results := make(map[string]taskResult)
 	for channelName := range config.GetRuntime().Channels {
-		tasks, err := broker.QueryTask(channelName)
+		tasks, err := broker.GetTaskManager().QueryTask(channelName)
 		if err != nil {
 			message := fmt.Sprintf("ERROR: %v", err)
 			log.Error(message)
@@ -84,7 +84,7 @@ func NewChannel(w http.ResponseWriter, r *http.Request) {
 func RemoveChannel(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponseHeader(w)
 
-	err := broker.RemoveChannel(mux.Vars(r)["channel_name"])
+	err := broker.GetTaskManager().RemoveChannel(mux.Vars(r)["channel_name"])
 	if err != nil {
 		w.Write(response.Failed(fmt.Sprintf("删除失败：%v", err)))
 		return

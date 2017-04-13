@@ -1,84 +1,140 @@
 package redis
 
 import (
-	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/config"
+	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
+	redis "gopkg.in/redis.v5"
 )
 
-// GetTaskChannel 从Redis中查询某个channel信息
-func GetTaskChannel(channelName string) (channel brokers.Channel, err error) {
-	client := createRedisClient()
-	defer client.Close()
-
-	result, err := client.HGet(TaskChannelsKey(), channelName).Result()
-	if err != nil {
-		return
-	}
-
-	err = json.Unmarshal([]byte(result), &channel)
-	if err != nil {
-		log.Error("parse channel [%s] from json to object failed", channelName)
-		return
-	}
-
-	return
+// TaskChannel is the queue object for redis broker
+type TaskChannel struct {
+	Runtime *config.Runtime
+	Client  *redis.Client
 }
 
-// GetTaskChannels 返回偶有的channel信息
-func GetTaskChannels() (channels map[string]*brokers.Channel, err error) {
-	channels = make(map[string]*brokers.Channel)
-
+// CreateTaskChannel create a redis queue
+func CreateTaskChannel() *TaskChannel {
 	client := createRedisClient()
-	defer client.Close()
+	return &TaskChannel{
+		Client:  client,
+		Runtime: config.GetRuntime(),
+	}
+}
 
-	results, err := client.HGetAll(TaskChannelsKey()).Result()
-	if err != nil {
-		return nil, err
+// Close task queue
+func (queue *TaskChannel) Close() {
+	queue.Client.Close()
+}
+
+// Listen to the redis queue
+func (queue *TaskChannel) Listen(channel *brokers.Channel) {
+
+	// 非任务模式不启用队列监听
+	if !queue.Runtime.Config.TaskMode {
+		return
 	}
 
-	for key, res := range results {
-		channel := brokers.Channel{}
-		err = json.Unmarshal([]byte(res), &channel)
-		if err != nil {
-			log.Error("parse channel [%s] from json to object failed", key)
-			continue
+	log.Debug("queue listener %s started.", channel.Name)
+	defer log.Debug("queue listener %s stopped.", channel.Name)
+
+	for {
+		select {
+		case <-channel.StopChan:
+			close(channel.Task)
+			return
+		default:
+			res, err := queue.Client.BRPop(2*time.Second, TaskQueueKey(channel.Name)).Result()
+			if err != nil {
+				continue
+			}
+
+			task := decodeTask(res[1])
+
+			queue.Client.HSet(TaskQueueExecKey(channel.Name), task.ID, res[1])
+			channel.Task <- task
 		}
 
-		channels[key] = &channel
 	}
-
-	return
 }
 
-// AddChannel 新增一个channel，会持久化到Redis中
-func AddChannel(channel *brokers.Channel) error {
-	client := createRedisClient()
-	defer client.Close()
+// Work function consuming the queue
+func (queue *TaskChannel) Work(i int, channel *brokers.Channel, callback func(command brokers.Task, processID string) bool) {
+	processID := fmt.Sprintf("%s %d", channel.Name, i)
 
-	channelJSON, err := json.Marshal(channel)
-	if err != nil {
-		return err
+	log.Debug("task customer [%s] started.", console.ColorfulText(console.TextRed, processID))
+	defer log.Debug("task customer [%s] stopped.", console.ColorfulText(console.TextRed, processID))
+
+	for {
+		select {
+		case task, ok := <-channel.Task:
+			if !ok {
+				return
+			}
+
+			func(task brokers.Task) {
+
+				startTime := time.Now()
+				// 执行结果，默认为false，失败
+				isSuccess := false
+
+				// 删除用于去重的缓存key
+				defer func() {
+
+					// 统计任务执行结果
+					if isSuccess {
+						config.IncrSuccTaskCount()
+					} else {
+						config.IncrFailTaskCount()
+					}
+
+					distinctKey := TaskQueueDistinctKey(channel.Name, task.TaskName)
+					execKey := TaskQueueExecKey(channel.Name)
+
+					log.Debug(
+						"[%s] clean %s %s ...",
+						console.ColorfulText(console.TextRed, processID),
+						distinctKey,
+						execKey,
+					)
+
+					err := queue.Client.Del(distinctKey).Err()
+					if err != nil {
+						log.Error(
+							"[%s] delete key %s failed: %v",
+							console.ColorfulText(console.TextRed, processID),
+							distinctKey,
+							err,
+						)
+					}
+
+					err = queue.Client.HDel(execKey, task.ID).Err()
+					if err != nil {
+						log.Error(
+							"[%s] remove key %s from %s: %v",
+							console.ColorfulText(console.TextRed, processID),
+							task.TaskName,
+							execKey,
+							err,
+						)
+					}
+
+					log.Info(
+						"[%s] task [%s] time-consuming %v",
+						console.ColorfulText(console.TextRed, processID),
+						console.ColorfulText(console.TextGreen, task.TaskName),
+						time.Since(startTime),
+					)
+				}()
+
+				if callback(task, processID) {
+					isSuccess = true
+				}
+			}(task)
+		}
 	}
-
-	err = client.HSet(TaskChannelsKey(), channel.Name, string(channelJSON)).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// RemoveChannel 从Redis中移除channel
-func RemoveChannel(channelName string) error {
-	client := createRedisClient()
-	defer client.Close()
-
-	err := client.HDel(TaskChannelsKey(), channelName).Err()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

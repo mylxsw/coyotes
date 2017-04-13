@@ -5,11 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/http/response"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 func RemoveTask(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err := broker.PushTask(brokers.Task{
+	rs, err := broker.GetTaskManager().PushTask(brokers.Task{
 		TaskName: taskName,
 		Channel:  taskChannel,
 	})
