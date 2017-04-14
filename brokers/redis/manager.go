@@ -37,8 +37,8 @@ func (manager *TaskManager) Close() {
 	manager.client.Close()
 }
 
-// PushTask 用于将任务加入到Channel
-func (manager *TaskManager) PushTask(task brokers.Task) (id string, existence bool, err error) {
+// AddTask 用于将任务加入到Channel
+func (manager *TaskManager) AddTask(task brokers.Task) (id string, existence bool, err error) {
 	if _, ok := manager.runtime.Channels[task.Channel]; !ok {
 		return "", false, fmt.Errorf("task channel [%s] not exist", task.TaskName)
 	}
@@ -161,45 +161,6 @@ func (manager *TaskManager) RemoveChannel(channelName string) error {
 	return nil
 }
 
-// MigrateDelayTask 迁移延时任务到执行队列
-func (manager *TaskManager) MigrateDelayTask() {
-	res, err := popDelayTasks.Run(
-		manager.client,
-		[]string{TaskDelayQueueKey()},
-		time.Now().Format("20060102150405"),
-	).Result()
-
-	if err != nil {
-		log.Warning("query delay task failed: %v", err)
-		return
-	}
-
-	for _, t := range res.([]interface{}) {
-
-		tk := decodeTask(t.(string))
-		_, existence, err := GetTaskManager().PushTask(tk)
-
-		if err != nil {
-			log.Error("add task %s failed: %v", tk.ID, err)
-			continue
-		}
-
-		res := "add"
-		if existence {
-			res = "repeat"
-		}
-		log.Debug("add delay task %s to channel %s: %s", tk.ID, tk.Channel, res)
-	}
-}
-
-// StartDelayTaskLifeCycle 启动延时任务迁移
-func StartDelayTaskLifeCycle() {
-	for {
-		time.Sleep(time.Second)
-		GetTaskManager().MigrateDelayTask()
-	}
-}
-
 // encodeTask 用于编码Task对象为json，用于存储到redis
 func encodeTask(task brokers.Task) string {
 	taskJSON, _ := json.Marshal(task)
@@ -232,7 +193,7 @@ func TransferPrepareTask() {
 
 		var task brokers.PrepareTask
 		if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
-			GetTaskManager().PushTask(brokers.Task{
+			GetTaskManager().AddTask(brokers.Task{
 				TaskName: task.Name,
 				Channel:  task.Channel,
 			})

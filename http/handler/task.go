@@ -53,7 +53,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 				Channel:  taskChannel,
 			})
 	} else {
-		taskID, existence, err = broker.GetTaskManager().PushTask(brokers.Task{
+		taskID, existence, err = broker.GetTaskManager().AddTask(brokers.Task{
 			TaskName: taskName,
 			Channel:  taskChannel,
 		})

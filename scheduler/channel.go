@@ -54,10 +54,10 @@ func NewChannel(name string, distinct bool, workerCount int) (*brokers.Channel, 
 	runtime := config.GetRuntime()
 
 	if name == "" {
-		return nil, fmt.Errorf("队列名称不能为空")
+		return nil, fmt.Errorf("channel name required")
 	}
 	if _, ok := runtime.Channels[name]; ok {
-		return nil, fmt.Errorf("任务队列 %s 已经存在", name)
+		return nil, fmt.Errorf("channel %s has existed", name)
 	}
 
 	channel := &brokers.Channel{

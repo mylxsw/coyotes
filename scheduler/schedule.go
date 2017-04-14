@@ -39,7 +39,7 @@ func Schedule() {
 STOP:
 
 	wg.Wait()
-	log.Debug("scheduler stoped.")
+	log.Debug("scheduler stoped")
 }
 
 // NewQueue 函数用于创建一个新的队列

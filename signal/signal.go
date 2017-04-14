@@ -28,7 +28,7 @@ func InitSignalReceiver() {
 			sig := <-signalChan
 			switch sig {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
-				log.Debug("Received exit signal, waiting for exit...")
+				log.Debug("waiting for exit...")
 
 				for _, channel := range runtime.Channels {
 					channel.StopChan <- struct{}{}

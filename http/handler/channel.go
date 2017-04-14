@@ -25,7 +25,7 @@ func StatusChannel(w http.ResponseWriter, r *http.Request) {
 
 	tasks, err := broker.GetTaskManager().QueryTask(mux.Vars(r)["channel_name"])
 	if err != nil {
-		message := fmt.Sprintf("ERROR: %v", err)
+		message := fmt.Sprintf("error: %v", err)
 		log.Error(message)
 		w.Write(response.Failed(message))
 		return
@@ -45,7 +45,7 @@ func StatusChannels(w http.ResponseWriter, r *http.Request) {
 	for channelName := range config.GetRuntime().Channels {
 		tasks, err := broker.GetTaskManager().QueryTask(channelName)
 		if err != nil {
-			message := fmt.Sprintf("ERROR: %v", err)
+			message := fmt.Sprintf("error: %v", err)
 			log.Error(message)
 			w.Write(response.Failed(message))
 			return

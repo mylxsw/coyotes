@@ -36,3 +36,42 @@ func (manager *TaskManager) AddDelayTask(execTime time.Time, task brokers.Task) 
 
 	return task.ID, val != 1, nil
 }
+
+// MigrateDelayTask 迁移延时任务到执行队列
+func (manager *TaskManager) MigrateDelayTask() {
+	res, err := popDelayTasks.Run(
+		manager.client,
+		[]string{TaskDelayQueueKey()},
+		time.Now().Format("20060102150405"),
+	).Result()
+
+	if err != nil {
+		log.Warning("query delay task failed: %v", err)
+		return
+	}
+
+	for _, t := range res.([]interface{}) {
+
+		tk := decodeTask(t.(string))
+		_, existence, err := GetTaskManager().AddTask(tk)
+
+		if err != nil {
+			log.Error("add task %s failed: %v", tk.ID, err)
+			continue
+		}
+
+		res := "add"
+		if existence {
+			res = "repeat"
+		}
+		log.Debug("add delay task %s to channel %s: %s", tk.ID, tk.Channel, res)
+	}
+}
+
+// StartDelayTaskLifeCycle 启动延时任务迁移
+func StartDelayTaskLifeCycle() {
+	for {
+		time.Sleep(time.Second)
+		GetTaskManager().MigrateDelayTask()
+	}
+}
