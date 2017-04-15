@@ -6,12 +6,28 @@ import (
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/console"
 )
 
 var newQueue = make(chan *brokers.Channel, 5)
 
 // Schedule 函数用于开始任务调度器
 func Schedule() {
+
+	outputChan := make(chan brokers.Output, 20)
+	defer close(outputChan)
+
+	go func() {
+		for output := range outputChan {
+			log.Info(
+				"[%s] %s -> %s",
+				console.ColorfulText(console.TextRed, output.ProcessID),
+				console.ColorfulText(console.TextGreen, output.Task.TaskName),
+				console.ColorfulText(console.TextYellow, output.Content),
+			)
+		}
+	}()
+
 	var wg sync.WaitGroup
 
 	runtime := config.GetRuntime()
@@ -19,6 +35,8 @@ func Schedule() {
 		wg.Add(1)
 		go func(i string) {
 			defer wg.Done()
+
+			runtime.Channels[i].OutputChan = outputChan
 			StartTaskRunner(runtime.Channels[i])
 		}(index)
 	}
@@ -31,6 +49,8 @@ func Schedule() {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
+
+				queueChannel.OutputChan = outputChan
 				StartTaskRunner(queueChannel)
 			}()
 		}

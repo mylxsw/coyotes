@@ -7,8 +7,6 @@ import (
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	commander "github.com/mylxsw/coyotes/command"
 	"github.com/mylxsw/coyotes/config"
-	"github.com/mylxsw/coyotes/console"
-	"github.com/mylxsw/coyotes/log"
 )
 
 // StartTaskRunner function start a taskRunner instance
@@ -25,9 +23,6 @@ func StartTaskRunner(channel *brokers.Channel) {
 	channel.StopChan = make(chan struct{}, 1)
 	defer close(channel.StopChan)
 
-	outputChan := make(chan commander.Output, 20)
-	defer close(outputChan)
-
 	// if _, err := client.Ping().Result(); err != nil {
 	// 	log.Error("Failed connected to redis server: %s", err)
 	// 	os.Exit(2)
@@ -36,37 +31,22 @@ func StartTaskRunner(channel *brokers.Channel) {
 	queue := broker.CreateTaskChannel(channel)
 	defer queue.Close()
 
-	go func() {
-		for output := range outputChan {
-			log.Info(
-				"[%s] %s -> %s",
-				console.ColorfulText(console.TextRed, output.ProcessID),
-				console.ColorfulText(console.TextGreen, output.Name),
-				console.ColorfulText(console.TextYellow, output.Content),
-			)
-		}
-	}()
+	queue.RegisterWorker(func(task brokers.Task, processID string) bool {
+		status, _ := commander.CreateShellCommand(task, channel.OutputChan).Execute(processID)
+		return status
+	})
 
 	var wg sync.WaitGroup
 	wg.Add(channel.WorkerCount + 1)
 
-	go func() {
-		defer wg.Done()
-		queue.Listen()
-	}()
+	go queue.Listen(func() {
+		wg.Done()
+	})
 
 	for index := 0; index < channel.WorkerCount; index++ {
-		go func(i int) {
-			defer wg.Done()
-
-			queue.Work(i, func(task brokers.Task, processID string) bool {
-				cmder := &commander.Command{
-					Output: outputChan,
-				}
-				status, _ := cmder.ExecuteTask(processID, task.TaskName)
-				return status
-			})
-		}(index)
+		go queue.Work(func() {
+			wg.Done()
+		})
 	}
 
 	wg.Wait()
