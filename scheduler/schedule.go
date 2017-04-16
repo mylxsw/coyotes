@@ -7,12 +7,13 @@ import (
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/console"
+	"context"
 )
 
 var newQueue = make(chan *brokers.Channel, 5)
 
 // Schedule 函数用于开始任务调度器
-func Schedule() {
+func Schedule(ctx context.Context) {
 
 	outputChan := make(chan brokers.Output, 20)
 	defer close(outputChan)
@@ -37,13 +38,13 @@ func Schedule() {
 			defer wg.Done()
 
 			runtime.Channels[i].OutputChan = outputChan
-			StartTaskRunner(runtime.Channels[i])
+			StartTaskRunner(ctx, runtime.Channels[i])
 		}(index)
 	}
 
 	for {
 		select {
-		case <-runtime.StopScheduler:
+		case <-ctx.Done():
 			goto STOP
 		case queueChannel := <-newQueue:
 			wg.Add(1)
@@ -51,7 +52,7 @@ func Schedule() {
 				defer wg.Done()
 
 				queueChannel.OutputChan = outputChan
-				StartTaskRunner(queueChannel)
+				StartTaskRunner(ctx, queueChannel)
 			}()
 		}
 	}

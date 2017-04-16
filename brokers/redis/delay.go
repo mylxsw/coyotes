@@ -9,6 +9,7 @@ import (
 	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/log"
 	"gopkg.in/redis.v5"
+	"context"
 )
 
 // AddDelayTask 新增一个延时任务到队列
@@ -69,9 +70,14 @@ func (manager *TaskManager) MigrateDelayTask() {
 }
 
 // StartDelayTaskLifeCycle 启动延时任务迁移
-func StartDelayTaskLifeCycle() {
+func StartDelayTaskLifeCycle(ctx context.Context) {
 	for {
 		time.Sleep(time.Second)
-		GetTaskManager().MigrateDelayTask()
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			GetTaskManager().MigrateDelayTask()
+		}
 	}
 }

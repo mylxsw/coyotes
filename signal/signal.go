@@ -5,18 +5,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
+	"context"
 )
 
 // InitSignalReceiver 初始化信号接受处理程序
-func InitSignalReceiver() {
+func InitSignalReceiver(ctx context.Context, cancel context.CancelFunc) {
 
-	runtime := config.GetRuntime()
-
-	signalChan := make(chan os.Signal, 1)
+	sigChan := make(chan os.Signal, 1)
 	signal.Notify(
-		signalChan,
+		sigChan,
 		syscall.SIGHUP,
 		syscall.SIGUSR2,
 		syscall.SIGINT,
@@ -25,17 +23,11 @@ func InitSignalReceiver() {
 	go func() {
 
 		for {
-			sig := <-signalChan
+			sig := <-sigChan
 			switch sig {
 			case syscall.SIGUSR2, syscall.SIGHUP, syscall.SIGINT, syscall.SIGKILL:
 				log.Debug("waiting for exit...")
-
-				for _, channel := range runtime.Channels {
-					channel.StopChan <- struct{}{}
-				}
-
-				runtime.StopScheduler <- struct{}{}
-				runtime.StopHTTPServer <- struct{}{}
+				cancel()
 			}
 		}
 	}()

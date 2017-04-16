@@ -9,6 +9,7 @@ import (
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
+	"context"
 )
 
 // TaskChannel is the queue object for redis broker
@@ -37,7 +38,7 @@ func (queue *TaskChannel) Close() {
 }
 
 // Listen to the redis queue
-func (queue *TaskChannel) Listen(dispose func ()) {
+func (queue *TaskChannel) Listen(ctx context.Context, dispose func ()) {
 	defer dispose()
 	// 非任务模式不启用队列监听
 	if !queue.runtime.Config.TaskMode {
@@ -49,7 +50,7 @@ func (queue *TaskChannel) Listen(dispose func ()) {
 
 	for {
 		select {
-		case <-queue.channel.StopChan:
+		case <-ctx.Done():
 			close(queue.channel.Task)
 			return
 		default:

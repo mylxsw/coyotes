@@ -40,8 +40,6 @@ type Info struct {
 // Runtime hold global runtime configuration
 type Runtime struct {
 	Config         Config
-	StopHTTPServer chan struct{}
-	StopScheduler  chan struct{}
 	Channels       map[string]*brokers.Channel
 	Info           Info
 }
@@ -89,10 +87,6 @@ func InitRuntime(
 		Channels: make(map[string]*brokers.Channel),
 		Info:     Info{},
 	}
-
-	// 用于向所有channel发送程序退出信号
-	runtime.StopHTTPServer = make(chan struct{})
-	runtime.StopScheduler = make(chan struct{})
 
 	// 进程启动时间
 	runtime.Info.StartedAt = time.Now()

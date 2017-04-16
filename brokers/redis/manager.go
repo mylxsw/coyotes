@@ -11,6 +11,7 @@ import (
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
+	"context"
 )
 
 type TaskManager struct {
@@ -181,22 +182,27 @@ func generateUUID() string {
 }
 
 // TransferPrepareTask 将prepare队列中的任务加入正式的任务队列
-func TransferPrepareTask() {
+func TransferPrepareTask(ctx context.Context) {
 	client := createRedisClient()
 	defer client.Close()
 
 	for {
-		res, err := client.BRPop(2*time.Second, TaskPrepareQueueKey()).Result()
-		if err != nil {
-			continue
-		}
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			res, err := client.BRPop(2*time.Second, TaskPrepareQueueKey()).Result()
+			if err != nil {
+				continue
+			}
 
-		var task brokers.PrepareTask
-		if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
-			GetTaskManager().AddTask(brokers.Task{
-				TaskName: task.Name,
-				Channel:  task.Channel,
-			})
+			var task brokers.PrepareTask
+			if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
+				GetTaskManager().AddTask(brokers.Task{
+					TaskName: task.Name,
+					Channel:  task.Channel,
+				})
+			}
 		}
 	}
 }

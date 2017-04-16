@@ -2,17 +2,17 @@ package http
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/http/handler"
 	"github.com/mylxsw/coyotes/log"
+	"context"
 )
 
 // StartHTTPServer start an http server instance serving for api request
-func StartHTTPServer() {
+func StartHTTPServer(ctx context.Context) {
 	runtime := config.GetRuntime()
 
 	r := mux.NewRouter()
@@ -32,10 +32,20 @@ func StartHTTPServer() {
 	r.HandleFunc("/channels/{channel_name}/tasks", handler.PushTask).Methods("POST")
 	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", handler.RemoveTask).Methods("DELETE")
 
-	log.Debug("http listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
+	srv := &http.Server{
+		Addr: runtime.Config.HTTP.ListenAddr,
+		Handler: r,
+	}
 
-	if err := http.ListenAndServe(runtime.Config.HTTP.ListenAddr, r); err != nil {
-		log.Error("failed listening http on %s: %v", runtime.Config.HTTP.ListenAddr, err)
-		os.Exit(2)
+	go func() {
+		select {
+		case <- ctx.Done():
+			srv.Shutdown(ctx)
+		}
+	}()
+
+	log.Debug("http listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
+	if err := srv.ListenAndServe(); err != nil {
+		log.Warning("http server stopped: %v", err)
 	}
 }
