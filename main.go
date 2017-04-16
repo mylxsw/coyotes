@@ -14,6 +14,8 @@ import (
 
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	server "github.com/mylxsw/coyotes/http"
+	"context"
+	"sync"
 )
 
 var (
@@ -82,17 +84,40 @@ func main() {
 	log.Debug("redis addr: %s/%d", runtime.Config.Redis.Addr, runtime.Config.Redis.DB)
 	log.Debug("process ID: %d", os.Getpid())
 
-	// 初始化所有channel，必须在初始化信号处理之前
-	scheduler.InitChannels()
+
 	// 信号处理程序，接收退出信号，平滑退出进程
-	signal.InitSignalReceiver()
+	ctx, cancel := context.WithCancel(context.Background())
+	signal.InitSignalReceiver(ctx, cancel)
 
-	go server.StartHTTPServer()
+	// 初始化所有channel
+	scheduler.InitChannels()
+
+	var wg sync.WaitGroup
+
+	// 启动http server
+	wg.Add(1)
 	go func() {
-		broker.TransferPrepareTask()
+		defer wg.Done()
+		server.StartHTTPServer(ctx)
 	}()
-	scheduler.Schedule()
 
-	<-runtime.StopHTTPServer
+	// 启动待执行任务转移任务
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		broker.TransferPrepareTask(ctx)
+	}()
+
+	// 启动延迟任务
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		broker.StartDelayTaskLifeCycle(ctx)
+	}()
+
+	// 启动任务调度器
+	scheduler.Schedule(ctx)
+
+	wg.Wait()
 	log.Debug("all stoped.")
 }

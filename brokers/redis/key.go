@@ -3,11 +3,12 @@ package redis
 import "fmt"
 
 const (
-	taskQueueKey     = "%s:tasks:queue"
-	taskQueueExecKey = taskQueueKey + ":exec"
-	taskDistinctKey  = taskQueueKey + ":%s:dis"
-	taskPrepareKey   = "task:prepare:queue"
-	taskChannelsKey  = "task:channels"
+	taskQueueKey      = "%s:tasks:queue"
+	taskQueueExecKey  = taskQueueKey + ":exec"
+	taskDistinctKey   = taskQueueKey + ":%s:dis"
+	taskPrepareKey    = "task:prepare:queue"
+	taskChannelsKey   = "task:channels"
+	taskDelayQueueKey = "task:delay:queue"
 )
 
 // TaskQueueKey 返回任务队列的KEY
@@ -33,4 +34,9 @@ func TaskPrepareQueueKey() string {
 // TaskChannelsKey 返回所有channel信息存储的KEY
 func TaskChannelsKey() string {
 	return taskChannelsKey
+}
+
+// TaskDelayQueueKey 返回延时任务的key
+func TaskDelayQueueKey() string {
+	return taskDelayQueueKey
 }

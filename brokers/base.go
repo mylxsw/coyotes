@@ -22,4 +22,11 @@ type Channel struct {
 	Distinct    bool          `json:"distinct"`
 	WorkerCount int           `json:"worker_count"`
 	StopChan    chan struct{} `json:"-"`
+	OutputChan  chan Output   `json:"-"`
+}
+
+type Output struct {
+	ProcessID string
+	Task      Task
+	Content   string
 }

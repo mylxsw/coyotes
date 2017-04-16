@@ -6,12 +6,29 @@ import (
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/console"
+	"context"
 )
 
 var newQueue = make(chan *brokers.Channel, 5)
 
 // Schedule 函数用于开始任务调度器
-func Schedule() {
+func Schedule(ctx context.Context) {
+
+	outputChan := make(chan brokers.Output, 20)
+	defer close(outputChan)
+
+	go func() {
+		for output := range outputChan {
+			log.Info(
+				"[%s] %s -> %s",
+				console.ColorfulText(console.TextRed, output.ProcessID),
+				console.ColorfulText(console.TextGreen, output.Task.TaskName),
+				console.ColorfulText(console.TextYellow, output.Content),
+			)
+		}
+	}()
+
 	var wg sync.WaitGroup
 
 	runtime := config.GetRuntime()
@@ -19,19 +36,23 @@ func Schedule() {
 		wg.Add(1)
 		go func(i string) {
 			defer wg.Done()
-			StartTaskRunner(runtime.Channels[i])
+
+			runtime.Channels[i].OutputChan = outputChan
+			StartTaskRunner(ctx, runtime.Channels[i])
 		}(index)
 	}
 
 	for {
 		select {
-		case <-runtime.StopScheduler:
+		case <-ctx.Done():
 			goto STOP
 		case queueChannel := <-newQueue:
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				StartTaskRunner(queueChannel)
+
+				queueChannel.OutputChan = outputChan
+				StartTaskRunner(ctx, queueChannel)
 			}()
 		}
 	}
@@ -39,7 +60,7 @@ func Schedule() {
 STOP:
 
 	wg.Wait()
-	log.Debug("scheduler stoped.")
+	log.Debug("scheduler stoped")
 }
 
 // NewQueue 函数用于创建一个新的队列

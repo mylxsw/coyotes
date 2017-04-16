@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
+	"strconv"
+
+	"time"
+
 	"github.com/gorilla/mux"
+	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/http/response"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 func RemoveTask(w http.ResponseWriter, r *http.Request) {
@@ -26,6 +30,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 
 	taskName := r.PostFormValue("task")
 	taskChannel := mux.Vars(r)["channel_name"]
+	delaySec, _ := strconv.Atoi(r.PostFormValue("delay"))
 
 	if taskChannel == "" {
 		taskChannel = config.GetRuntime().Config.DefaultChannel
@@ -36,10 +41,24 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rs, err := broker.PushTask(brokers.Task{
-		TaskName: taskName,
-		Channel:  taskChannel,
-	})
+	var taskID string
+	var err error
+	var existence bool
+
+	if delaySec != 0 {
+		taskID, existence, err = broker.GetTaskManager().AddDelayTask(
+			time.Now().Add(time.Duration(delaySec)*time.Second),
+			brokers.Task{
+				TaskName: taskName,
+				Channel:  taskChannel,
+			})
+	} else {
+		taskID, existence, err = broker.GetTaskManager().AddTask(brokers.Task{
+			TaskName: taskName,
+			Channel:  taskChannel,
+		})
+	}
+
 	if err != nil {
 		message := fmt.Sprintf("failed push task [%s] to redis queue [%s]: %v", taskName, taskChannel, err)
 		log.Error(message)
@@ -48,10 +67,12 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(response.Success(struct {
+		TaskID   string `json:"task_id"`
 		TaskName string `json:"task_name"`
 		Result   bool   `json:"result"`
 	}{
+		TaskID:   taskID,
 		TaskName: taskName,
-		Result:   int64(rs.(int64)) == 1,
+		Result:   !existence,
 	}))
 }

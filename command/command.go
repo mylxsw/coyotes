@@ -10,22 +10,25 @@ import (
 
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
+	"github.com/mylxsw/coyotes/brokers"
 )
 
-type Output struct {
-	ProcessID string
-	Name      string
-	Content   string
+type ShellCommand struct {
+	output chan brokers.Output
+	task   brokers.Task
 }
 
-type Command struct {
-	Output chan Output
+func CreateShellCommand(task brokers.Task, outputChan chan brokers.Output) *ShellCommand {
+	return &ShellCommand{
+		output: outputChan,
+		task:   task,
+	}
 }
 
-// 执行命令，绑定输出
+// Execute 执行命令，绑定输出
 // 返回值（是否成功，错误）
-func (self *Command) ExecuteTask(processID string, cmdStr string) (bool, error) {
-	params := strings.Split(cmdStr, " ")
+func (self *ShellCommand) Execute(processID string) (bool, error) {
+	params := strings.Split(self.task.TaskName, " ")
 	cmd := exec.Command(params[0], params[1:]...)
 
 	stdout, err := cmd.StdoutPipe()
@@ -41,7 +44,7 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) (bool, error) 
 	log.Debug(
 		"[%s] command started: %s",
 		console.ColorfulText(console.TextRed, processID),
-		console.ColorfulText(console.TextGreen, cmdStr),
+		console.ColorfulText(console.TextGreen, self.task.TaskName),
 	)
 	if err := cmd.Start(); err != nil {
 		return false, err
@@ -51,11 +54,11 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) (bool, error) 
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		self.bindOutput(processID, cmdStr, &stdout)
+		self.bindOutput(processID, &stdout)
 	}()
 	go func() {
 		defer wg.Done()
-		self.bindOutput(processID, cmdStr, &stderr)
+		self.bindOutput(processID, &stderr)
 	}()
 
 	wg.Wait()
@@ -68,21 +71,21 @@ func (self *Command) ExecuteTask(processID string, cmdStr string) (bool, error) 
 		log.Debug(
 			"[%s] command [%s] execution success",
 			console.ColorfulText(console.TextRed, processID),
-			console.ColorfulText(console.TextGreen, cmdStr),
+			console.ColorfulText(console.TextGreen, self.task.TaskName),
 		)
 	} else {
 		log.Debug(
 			"[%s] command [%s] execution failed",
 			console.ColorfulText(console.TextRed, processID),
-			console.ColorfulText(console.TextGreen, cmdStr),
+			console.ColorfulText(console.TextGreen, self.task.TaskName),
 		)
 	}
 
 	return cmd.ProcessState.Success(), nil
 }
 
-// 绑定标准输入、输出到输出channel
-func (self *Command) bindOutput(processID string, name string, input *io.ReadCloser) error {
+// bindOutput 绑定标准输入、输出到输出channel
+func (self *ShellCommand) bindOutput(processID string, input *io.ReadCloser) error {
 	reader := bufio.NewReader(*input)
 	for {
 		line, err := reader.ReadString('\n')
@@ -91,16 +94,16 @@ func (self *Command) bindOutput(processID string, name string, input *io.ReadClo
 				return fmt.Errorf(
 					"[%s] command [%s] execution failed: %s",
 					console.ColorfulText(console.TextRed, processID),
-					console.ColorfulText(console.TextGreen, name),
+					console.ColorfulText(console.TextGreen, self.task.TaskName),
 					console.ColorfulText(console.TextRed, err.Error()),
 				)
 			}
 			break
 		}
 
-		self.Output <- Output{
+		self.output <- brokers.Output{
 			ProcessID: processID,
-			Name:      name,
+			Task:      self.task,
 			Content:   strings.TrimRight(line, "\n"),
 		}
 	}
