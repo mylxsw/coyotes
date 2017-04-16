@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/console"
@@ -14,8 +16,6 @@ import (
 
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	server "github.com/mylxsw/coyotes/http"
-	"context"
-	"sync"
 )
 
 var (
@@ -30,6 +30,8 @@ var (
 	taskMode               bool
 	colorfulTTY            bool
 	defaultChannel         string
+	logFilename            string
+	debugMode              bool
 )
 
 func main() {
@@ -50,6 +52,8 @@ func main() {
 	flag.BoolVar(&taskMode, "task-mode", true, "是否启用任务模式，默认启用，关闭则不会执行消费")
 	flag.BoolVar(&colorfulTTY, "colorful-tty", false, "是否启用彩色模式的控制台输出")
 	flag.StringVar(&defaultChannel, "channel-default", "default", "默认channel名称，用于消息队列")
+	flag.StringVar(&logFilename, "log-file", "", "日志文件存储路径，默认为空，直接输出到标准输出")
+	flag.BoolVar(&debugMode, "debug", false, "日志输出级别，默认为false，如果为true，则输出debug日志")
 
 	flag.Parse()
 
@@ -65,7 +69,31 @@ func main() {
 		taskMode,
 		colorfulTTY,
 		defaultChannel,
+		logFilename,
+		debugMode,
 	)
+
+	if os.Getuid() == 0 {
+		fmt.Println(console.ColorfulText(
+			console.TextYellow,
+			"\n当前以root(%s)用户执行，使用root权限执行可能会造成严重的安全问题，建议使用非root用户执行\n",
+		))
+	}
+
+	// 初始化日志输出
+	// 指定日志文件时，使用日志文件输出，否则输出到标准输出
+	if logFilename != "" {
+		logFile, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+		if err != nil {
+			fmt.Printf("open log file %s failed: %v\n", logFilename, err)
+			os.Exit(2)
+		}
+		defer logFile.Close()
+
+		log.InitLogger(logFile, debugMode)
+	} else {
+		log.InitLogger(os.Stdout, debugMode)
+	}
 
 	// 创建进程pid文件
 	if runtime.Config.PidFile != "" {
@@ -83,7 +111,6 @@ func main() {
 
 	log.Debug("redis addr: %s/%d", runtime.Config.Redis.Addr, runtime.Config.Redis.DB)
 	log.Debug("process ID: %d", os.Getpid())
-
 
 	// 信号处理程序，接收退出信号，平滑退出进程
 	ctx, cancel := context.WithCancel(context.Background())

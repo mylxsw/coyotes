@@ -27,6 +27,8 @@ type Config struct {
 	ColorfulTTY      bool
 	DefaultChannel   string
 	ChannelCacheSize int
+	LogFilename      string
+	DebugMode        bool
 }
 
 // 进程运行信息
@@ -39,9 +41,9 @@ type Info struct {
 
 // Runtime hold global runtime configuration
 type Runtime struct {
-	Config         Config
-	Channels       map[string]*brokers.Channel
-	Info           Info
+	Config   Config
+	Channels map[string]*brokers.Channel
+	Info     Info
 }
 
 var runtime *Runtime
@@ -58,6 +60,8 @@ func InitRuntime(
 	taskMode bool,
 	colorfulTTY bool,
 	defaultChannel string,
+	logFilename string,
+	debugMode bool,
 ) *Runtime {
 
 	if redisAddr == "127.0.0.1:6379" || redisAddr == "" {
@@ -83,6 +87,8 @@ func InitRuntime(
 			ColorfulTTY:      colorfulTTY,
 			DefaultChannel:   defaultChannel,
 			ChannelCacheSize: 20,
+			LogFilename:      logFilename,
+			DebugMode:        debugMode,
 		},
 		Channels: make(map[string]*brokers.Channel),
 		Info:     Info{},

@@ -8,3 +8,5 @@ import:
   version: ^2.6.1
   subpackages:
   - uuid
+- package: github.com/op/go-logging
+  version: ^1.0.0

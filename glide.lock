@@ -1,5 +1,5 @@
-hash: cd09685deef84a3b9dcf82ad7fff3ff97cda512f7df90a600b4f1120c7244bcb
-updated: 2017-04-11T12:46:32.490893009+08:00
+hash: ce40b92c6bc48e92366a89b20ea81e10bfb865332afa5440fd8a13eb4810ea2d
+updated: 2017-04-16T21:43:23.728243676+08:00
 imports:
 - name: github.com/docker/distribution
   version: a25b9ef0c9fe242ac04bb20d3a028442b7d266b6
@@ -9,6 +9,8 @@ imports:
   version: 14f550f51af52180c2eefed15e5fd18d63c0a64a
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/op/go-logging
+  version: b2cb9fa56473e98db8caba80237377e83fe44db5
 - name: gopkg.in/redis.v5
   version: a16aeec10ff407b1e7be6dd35797ccf5426ef0f0
   subpackages:
