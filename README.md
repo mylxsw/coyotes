@@ -254,4 +254,5 @@ Coyotes提供了Restful风格的API用于对其进行管理。
 * [ ] 增加配置文件
 * [ ] 增加对Redis Sentinel和Redis Cluster的支持
 * [ ] 解决可以执行任意系统命令带来的安全问题
+* [ ] 加入Redis连接池的支持
 
