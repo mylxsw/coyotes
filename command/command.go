@@ -8,9 +8,11 @@ import (
 	"strings"
 	"sync"
 
+	"syscall"
+
+	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 type ShellCommand struct {
@@ -30,6 +32,12 @@ func CreateShellCommand(task brokers.Task, outputChan chan brokers.Output) *Shel
 func (self *ShellCommand) Execute(processID string) (bool, error) {
 	params := strings.Split(self.task.TaskName, " ")
 	cmd := exec.Command(params[0], params[1:]...)
+
+	// 解决主进程收到信号后会透传给执行中的命令的问题
+	// 避免正在执行中的任务被中断
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: true,
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
