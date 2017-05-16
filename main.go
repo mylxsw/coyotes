@@ -106,7 +106,7 @@ func main() {
 	}
 
 	if runtime.Config.ColorfulTTY {
-		fmt.Println(console.ColorfulText(console.TextCyan, config.WelcomeMessage()))
+		fmt.Println(console.ColorfulText(console.TextGreen, config.WelcomeMessage()))
 	}
 
 	log.Debug("redis addr: %s/%d", runtime.Config.Redis.Addr, runtime.Config.Redis.DB)

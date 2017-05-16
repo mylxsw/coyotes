@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"time"
 
+	"context"
+
 	"github.com/docker/distribution/uuid"
 	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
-	"context"
 )
 
 type TaskManager struct {
@@ -201,6 +202,7 @@ func TransferPrepareTask(ctx context.Context) {
 				GetTaskManager().AddTask(brokers.Task{
 					TaskName: task.Name,
 					Channel:  task.Channel,
+					Command:  task.Command,
 				})
 			}
 		}

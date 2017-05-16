@@ -3,11 +3,11 @@ package scheduler
 import (
 	"sync"
 
+	"context"
+
+	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
-	"github.com/mylxsw/coyotes/console"
-	"context"
 )
 
 var newQueue = make(chan *brokers.Channel, 5)
@@ -22,9 +22,9 @@ func Schedule(ctx context.Context) {
 		for output := range outputChan {
 			log.Info(
 				"[%s] %s -> %s",
-				console.ColorfulText(console.TextRed, output.ProcessID),
-				console.ColorfulText(console.TextGreen, output.Task.TaskName),
-				console.ColorfulText(console.TextYellow, output.Content),
+				output.ProcessID,
+				output.Task.TaskName,
+				output.Content,
 			)
 		}
 	}()

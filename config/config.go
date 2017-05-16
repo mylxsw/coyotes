@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/mylxsw/coyotes/brokers"
 	"time"
+
+	"github.com/mylxsw/coyotes/brokers"
 )
 
 // RedisConfig hold redis configuration

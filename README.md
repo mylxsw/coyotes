@@ -197,7 +197,56 @@ Coyotes提供了Restful风格的API用于对其进行管理。
 
 | 参数 | 说明 |
 | --- | --- |
-| task | 任务命令，比如`date` |
+| task | 任务名称，不指定command参数时，作为要执行的命令，指定command参数时则仅仅作为任务名称展示使用 |
+| command | 要执行的命令，推荐使用该方式，如果不指定，则使用task参数作为要执行的命令 |
+| args | 命令参数，仅在指定command参数时有效，可以指定多个，依次作为命令参数 |
+| delay | 延迟执行，单位为秒，默认为0 |
+
+#### 请求示例
+
+    POST /channels/default/tasks HTTP/1.1
+    cache-control: no-cache
+    Postman-Token: c084444b-6657-4d30-8128-7ad5d898b69b
+    Content-Type: multipart/form-data; boundary=--------------------------488585830099792470732554
+    User-Agent: PostmanRuntime/3.0.11-hotfix.2
+    Accept: */*
+    Host: localhost:60001
+    accept-encoding: gzip, deflate
+    content-length: 700
+    Connection: keep-alive
+
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="task"
+
+    pwd
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="command"
+
+    ping
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="args"
+
+    -c
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="args"
+
+    10
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="args"
+
+    baidu.com
+    ----------------------------488585830099792470732554
+    Content-Disposition: form-data; name="delay"
+
+    10
+    ----------------------------488585830099792470732554--
+    HTTP/1.1 200 OK
+    Content-Type: application/json; charset=utf-8
+    Date: Tue, 16 May 2017 13:11:31 GMT
+    Content-Length: 124
+
+    {"status_code":200,"message":"ok","data":{"task_id":"2fe1347e-d0f1-4da7-a08e-0f299e812008","task_name":"pwd","result":true}}
+
 
 #### 响应结果示例
 
@@ -205,6 +254,7 @@ Coyotes提供了Restful风格的API用于对其进行管理。
       "status_code": 200,
       "message": "ok",
       "data": {
+        "task_id": "2fe1347e-d0f1-4da7-a08e-0f299e812008",
         "task_name": "date",
         "result": true
       }

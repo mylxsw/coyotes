@@ -3,12 +3,12 @@ package http
 import (
 	"net/http"
 
+	"context"
+
 	"github.com/gorilla/mux"
 	"github.com/mylxsw/coyotes/config"
-	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/http/handler"
 	"github.com/mylxsw/coyotes/log"
-	"context"
 )
 
 // StartHTTPServer start an http server instance serving for api request
@@ -33,18 +33,18 @@ func StartHTTPServer(ctx context.Context) {
 	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", handler.RemoveTask).Methods("DELETE")
 
 	srv := &http.Server{
-		Addr: runtime.Config.HTTP.ListenAddr,
+		Addr:    runtime.Config.HTTP.ListenAddr,
 		Handler: r,
 	}
 
 	go func() {
 		select {
-		case <- ctx.Done():
+		case <-ctx.Done():
 			srv.Shutdown(ctx)
 		}
 	}()
 
-	log.Debug("http listening on %s", console.ColorfulText(console.TextCyan, runtime.Config.HTTP.ListenAddr))
+	log.Debug("http listening on %s", runtime.Config.HTTP.ListenAddr)
 	if err := srv.ListenAndServe(); err != nil {
 		log.Warning("http server stopped: %v", err)
 	}

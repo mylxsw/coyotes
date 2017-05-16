@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"context"
+
 	"github.com/mylxsw/coyotes/brokers"
 	"github.com/mylxsw/coyotes/config"
-	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
 	redis "gopkg.in/redis.v5"
-	"context"
 )
 
 // TaskChannel is the queue object for redis broker
@@ -38,7 +38,7 @@ func (queue *TaskChannel) Close() {
 }
 
 // Listen to the redis queue
-func (queue *TaskChannel) Listen(ctx context.Context, dispose func ()) {
+func (queue *TaskChannel) Listen(ctx context.Context, dispose func()) {
 	defer dispose()
 	// 非任务模式不启用队列监听
 	if !queue.runtime.Config.TaskMode {
@@ -74,14 +74,14 @@ func (queue *TaskChannel) RegisterWorker(callback func(command brokers.Task, pro
 }
 
 // Work 执行消费者worker
-func (queue *TaskChannel) Work(dispose func ()) {
+func (queue *TaskChannel) Work(dispose func()) {
 	defer dispose()
 
 	queue.workerCount++
 	processID := fmt.Sprintf("%s %d", queue.channel.Name, queue.workerCount)
 
-	log.Debug("worker [%s] started.", console.ColorfulText(console.TextRed, processID))
-	defer log.Debug("worker [%s] stopped.", console.ColorfulText(console.TextRed, processID))
+	log.Debug("worker [%s] started.", processID)
+	defer log.Debug("worker [%s] stopped.", processID)
 
 	for {
 		select {
@@ -111,7 +111,7 @@ func (queue *TaskChannel) Work(dispose func ()) {
 
 					log.Debug(
 						"[%s] clean %s %s ...",
-						console.ColorfulText(console.TextRed, processID),
+						processID,
 						distinctKey,
 						execKey,
 					)
@@ -120,7 +120,7 @@ func (queue *TaskChannel) Work(dispose func ()) {
 					if err != nil {
 						log.Error(
 							"[%s] delete key %s failed: %v",
-							console.ColorfulText(console.TextRed, processID),
+							processID,
 							distinctKey,
 							err,
 						)
@@ -130,7 +130,7 @@ func (queue *TaskChannel) Work(dispose func ()) {
 					if err != nil {
 						log.Error(
 							"[%s] remove key %s from %s: %v",
-							console.ColorfulText(console.TextRed, processID),
+							processID,
 							task.TaskName,
 							execKey,
 							err,
@@ -139,8 +139,8 @@ func (queue *TaskChannel) Work(dispose func ()) {
 
 					log.Info(
 						"[%s] task [%s] time-consuming %v",
-						console.ColorfulText(console.TextRed, processID),
-						console.ColorfulText(console.TextGreen, task.TaskName),
+						processID,
+						task.TaskName,
 						time.Since(startTime),
 					)
 				}()

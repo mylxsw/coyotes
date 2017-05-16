@@ -31,6 +31,21 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	taskName := r.PostFormValue("task")
 	taskChannel := mux.Vars(r)["channel_name"]
 	delaySec, _ := strconv.Atoi(r.PostFormValue("delay"))
+	commandName := r.PostFormValue("command")
+
+	var args []string
+	for key, values := range r.PostForm {
+		if key != "args" {
+			continue
+		}
+
+		args = append(args, values...)
+	}
+
+	if taskName == "" {
+		w.Write(response.Failed("任务名称不能为空"))
+		return
+	}
 
 	if taskChannel == "" {
 		taskChannel = config.GetRuntime().Config.DefaultChannel
@@ -45,18 +60,22 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var existence bool
 
+	task := brokers.Task{
+		TaskName: taskName,
+		Channel:  taskChannel,
+		Command: brokers.TaskCommand{
+			Name: commandName,
+			Args: args,
+		},
+	}
+
 	if delaySec != 0 {
 		taskID, existence, err = broker.GetTaskManager().AddDelayTask(
 			time.Now().Add(time.Duration(delaySec)*time.Second),
-			brokers.Task{
-				TaskName: taskName,
-				Channel:  taskChannel,
-			})
+			task,
+		)
 	} else {
-		taskID, existence, err = broker.GetTaskManager().AddTask(brokers.Task{
-			TaskName: taskName,
-			Channel:  taskChannel,
-		})
+		taskID, existence, err = broker.GetTaskManager().AddTask(task)
 	}
 
 	if err != nil {
