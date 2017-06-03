@@ -21,8 +21,6 @@ type taskResult struct {
 
 // StatusChannel 查询单个Channel的任务
 func StatusChannel(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
-
 	tasks, err := broker.GetTaskManager().QueryTask(mux.Vars(r)["channel_name"])
 	if err != nil {
 		message := fmt.Sprintf("error: %v", err)
@@ -39,8 +37,6 @@ func StatusChannel(w http.ResponseWriter, r *http.Request) {
 
 // StatusChannels 查询所有channel的任务
 func StatusChannels(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
-
 	results := make(map[string]taskResult)
 	for channelName := range config.GetRuntime().Channels {
 		tasks, err := broker.GetTaskManager().QueryTask(channelName)
@@ -61,8 +57,6 @@ func StatusChannels(w http.ResponseWriter, r *http.Request) {
 
 // NewChannel function create new a task queue
 func NewChannel(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
-
 	name := r.PostFormValue("name")
 	distinct := r.PostFormValue("distinct") == "true"
 	workerCount, err := strconv.Atoi(r.PostFormValue("worker"))
@@ -82,7 +76,6 @@ func NewChannel(w http.ResponseWriter, r *http.Request) {
 
 // RemoveChannel remove the spectified channel
 func RemoveChannel(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
 
 	err := broker.GetTaskManager().RemoveChannel(mux.Vars(r)["channel_name"])
 	if err != nil {

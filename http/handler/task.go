@@ -17,7 +17,6 @@ import (
 )
 
 func RemoveTask(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
 
 	// vars := mux.Vars(r)
 	// channelName := vars["channel_name"]
@@ -26,7 +25,6 @@ func RemoveTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func PushTask(w http.ResponseWriter, r *http.Request) {
-	response.SendJSONResponseHeader(w)
 
 	taskName := r.PostFormValue("task")
 	taskChannel := mux.Vars(r)["channel_name"]

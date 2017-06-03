@@ -78,9 +78,6 @@ const htmlTemplate = `
 `
 
 func Home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-
 	runtime := config.GetRuntime()
 
 	tmpl, _ := template.New("info").Parse(htmlTemplate)

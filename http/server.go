@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/http/handler"
+	mw "github.com/mylxsw/coyotes/http/middleware"
 	"github.com/mylxsw/coyotes/log"
 )
 
@@ -17,20 +18,20 @@ func StartHTTPServer(ctx context.Context) {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", handler.Home).Methods("GET")
+	r.HandleFunc("/", mw.Handler(handler.Home, mw.WithHTMLResponse)).Methods("GET")
 
 	// 查看所有channel的状态
-	r.HandleFunc("/channels", handler.StatusChannels).Methods("GET")
+	r.HandleFunc("/channels", mw.Handler(handler.StatusChannels, mw.WithJSONResponse)).Methods("GET")
 	// 创建新的channel
-	r.HandleFunc("/channels", handler.NewChannel).Methods("POST")
+	r.HandleFunc("/channels", mw.Handler(handler.NewChannel, mw.WithJSONResponse)).Methods("POST")
 	// 查看某个channel的状态
-	r.HandleFunc("/channels/{channel_name}", handler.StatusChannel).Methods("GET")
+	r.HandleFunc("/channels/{channel_name}", mw.Handler(handler.StatusChannel, mw.WithJSONResponse)).Methods("GET")
 	// 删除某个channel
-	r.HandleFunc("/channels/{channel_name}", handler.RemoveChannel).Methods("DELETE")
+	r.HandleFunc("/channels/{channel_name}", mw.Handler(handler.RemoveChannel, mw.WithJSONResponse)).Methods("DELETE")
 
 	// 推送新的task到channel
-	r.HandleFunc("/channels/{channel_name}/tasks", handler.PushTask).Methods("POST")
-	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", handler.RemoveTask).Methods("DELETE")
+	r.HandleFunc("/channels/{channel_name}/tasks", mw.Handler(handler.PushTask, mw.WithJSONResponse)).Methods("POST")
+	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", mw.Handler(handler.RemoveTask, mw.WithJSONResponse)).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:    runtime.Config.HTTP.ListenAddr,
