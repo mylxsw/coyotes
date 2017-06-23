@@ -14,6 +14,8 @@ import (
 	"github.com/mylxsw/coyotes/scheduler"
 	"github.com/mylxsw/coyotes/signal"
 
+	"os/exec"
+
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	server "github.com/mylxsw/coyotes/http"
 )
@@ -32,9 +34,11 @@ var (
 	defaultChannel         string
 	logFilename            string
 	debugMode              bool
+	daemonize              bool
 )
 
 func main() {
+
 	flag.Usage = func() {
 		fmt.Println(config.WelcomeMessageStr)
 		fmt.Print("Options:\n\n")
@@ -54,8 +58,25 @@ func main() {
 	flag.StringVar(&defaultChannel, "channel-default", "default", "默认channel名称，用于消息队列")
 	flag.StringVar(&logFilename, "log-file", "", "日志文件存储路径，默认为空，直接输出到标准输出")
 	flag.BoolVar(&debugMode, "debug", false, "日志输出级别，默认为false，如果为true，则输出debug日志")
+	flag.BoolVar(&daemonize, "daemonize", false, "守护进程模式，模式为false")
 
 	flag.Parse()
+
+	// 如果是守护进程模式，则创建子进程，退出父进程
+	if daemonize && os.Getppid() != 1 {
+		binary, err := exec.LookPath(os.Args[0])
+		if err != nil {
+			fmt.Println("failed to lookup binary:", err)
+			os.Exit(2)
+		}
+		_, err = os.StartProcess(binary, os.Args, &os.ProcAttr{Dir: "", Env: nil, Files: []*os.File{os.Stdin, os.Stdout, os.Stderr}, Sys: nil})
+		if err != nil {
+			fmt.Println("failed to start process:", err)
+			os.Exit(2)
+		}
+
+		os.Exit(0)
+	}
 
 	runtime := config.InitRuntime(
 		redisAddr,
