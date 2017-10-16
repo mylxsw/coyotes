@@ -77,6 +77,7 @@ const htmlTemplate = `
 </html>
 `
 
+// Home 用于输出服务运行状态信息
 func Home(w http.ResponseWriter, r *http.Request) {
 	runtime := config.GetRuntime()
 

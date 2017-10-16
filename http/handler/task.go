@@ -24,6 +24,12 @@ func RemoveTask(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// PushTask 添加任务到任务队列
+// 参数：
+//    task         任务名称，不能为空，用于唯一标识一个任务
+//    channel_name 任务执行channel，标识任务在哪个channel中执行，如果不指定则在默认的channel中执行
+//    delay        如果需要延迟执行，这里指定延迟的秒数，0为不延迟执行
+//    command      要执行的命令
 func PushTask(w http.ResponseWriter, r *http.Request) {
 
 	taskName := r.PostFormValue("task")

@@ -1,7 +1,7 @@
 package config
 
 // 当前版本
-const VERSION  = "v1.0";
+const VERSION  = "v1.0"
 
 var WelcomeMessageStr = `
   ____                  _
