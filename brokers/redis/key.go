@@ -3,12 +3,13 @@ package redis
 import "fmt"
 
 const (
-	taskQueueKey      = "%s:tasks:queue"
-	taskQueueExecKey  = taskQueueKey + ":exec"
-	taskDistinctKey   = taskQueueKey + ":%s:dis"
-	taskPrepareKey    = "task:prepare:queue"
-	taskChannelsKey   = "task:channels"
-	taskDelayQueueKey = "task:delay:queue"
+	taskQueueKey       = "%s:tasks:queue"
+	taskQueueExecKey   = taskQueueKey + ":exec"
+	taskDistinctKey    = taskQueueKey + ":%s:dis"
+	taskFailedQueueKey = taskQueueKey + ":failed"
+	taskPrepareKey     = "task:prepare:queue"
+	taskChannelsKey    = "task:channels"
+	taskDelayQueueKey  = "task:delay:queue"
 )
 
 // TaskQueueKey 返回任务队列的KEY
@@ -24,6 +25,11 @@ func TaskQueueExecKey(channel string) string {
 // TaskQueueDistinctKey 返回任务的去重KEY
 func TaskQueueDistinctKey(channel string, command string) string {
 	return fmt.Sprintf(taskDistinctKey, channel, command)
+}
+
+// TaskFailedQueueKey 返回失败任务队列KEY
+func TaskFailedQueueKey(channel string) string {
+	return fmt.Sprintf(taskFailedQueueKey, channel)
 }
 
 // TaskPrepareQueueKey return the prepare key for queue

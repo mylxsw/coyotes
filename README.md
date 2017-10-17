@@ -278,6 +278,74 @@ Coyotes提供了Restful风格的API用于对其进行管理。
       "data": null
     }
 
+### **GET /channels/{channel_name}/failed-tasks** 查询channel下所有失败的任务
+
+#### 响应结果示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": {
+            "3688442d-a896-4456-984e-70aae8a75139": {
+                "task_id": "3688442d-a896-4456-984e-70aae8a75139",
+                "task_name": "git-command",
+                "command": {
+                    "name": "git",
+                    "args": null
+                },
+                "channel": "default",
+                "status": "",
+                "retry_count": 3,
+                "failed_at": "2017-10-17T16:49:09.647182+08:00"
+            }
+        }
+    }
+
+### **GET /channels/{channel_name}/failed-tasks/{task_id}** 查询channel下失败的某个任务
+
+#### 请求参数
+
+| 参数 | 说明 |
+|---|---|
+| channel_name | 任务所在的channel |
+| task_id | 任务ID |
+
+#### 响应示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": {
+            "task_id": "3688442d-a896-4456-984e-70aae8a75139",
+            "task_name": "git-command",
+            "command": {
+                "name": "git",
+                "args": null
+            },
+            "channel": "default",
+            "status": "",
+            "retry_count": 3,
+            "failed_at": "2017-10-17T16:49:09.647182+08:00"
+        }
+    }
+
+### **POST /channels/{channel_name}/failed-tasks/{task_id}** 重试channel下失败的任务
+
+#### 请求参数
+
+| 参数 | 说明 |
+|---|---|
+| channel_name | 任务所在的channel |
+| task_id | 任务ID |
+
+#### 响应示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": null
+    }
+
 ## 注意事项
 
 ### 安全问题

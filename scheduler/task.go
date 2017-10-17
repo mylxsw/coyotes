@@ -3,11 +3,12 @@ package scheduler
 import (
 	"sync"
 
+	"context"
+
 	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	commander "github.com/mylxsw/coyotes/command"
 	"github.com/mylxsw/coyotes/config"
-	"context"
 )
 
 // StartTaskRunner function start a taskRunner instance
@@ -22,9 +23,9 @@ func StartTaskRunner(ctx context.Context, channel *brokers.Channel) {
 	queue := broker.CreateTaskChannel(channel)
 	defer queue.Close()
 
-	queue.RegisterWorker(func(task brokers.Task, processID string) bool {
-		status, _ := commander.CreateShellCommand(task, channel.OutputChan).Execute(processID)
-		return status
+	queue.RegisterWorker(func(task brokers.Task, processID string) (bool, error) {
+		status, err := commander.CreateShellCommand(task, channel.OutputChan).Execute(processID)
+		return status, err
 	})
 
 	var wg sync.WaitGroup

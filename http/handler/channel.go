@@ -87,3 +87,15 @@ func RemoveChannel(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(response.Success(nil))
 }
+
+// FailedTasksInChannel 查询channel的失败队列中所有的任务
+func FailedTasksInChannel(w http.ResponseWriter, r *http.Request) {
+	channelName := mux.Vars(r)["channel_name"]
+	tasks, err := broker.GetTaskManager().GetFailedTasks(channelName)
+	if err != nil {
+		w.Write(response.Failed(fmt.Sprintf("查询失败:%v", err)))
+		return
+	}
+
+	w.Write(response.Success(tasks))
+}

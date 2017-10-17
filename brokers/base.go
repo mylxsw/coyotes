@@ -1,5 +1,7 @@
 package brokers
 
+import "time"
+
 // PrepareTask is the task that prepared to join queue
 type PrepareTask struct {
 	Name      string      `json:"task"`
@@ -10,11 +12,13 @@ type PrepareTask struct {
 
 // Task represent a task object
 type Task struct {
-	ID       string      `json:"task_id"`
-	TaskName string      `json:"task_name"`
-	Command  TaskCommand `json:"command"`
-	Channel  string      `json:"channel"`
-	Status   string      `json:"status"`
+	ID         string      `json:"task_id"`
+	TaskName   string      `json:"task_name"`
+	Command    TaskCommand `json:"command"`
+	Channel    string      `json:"channel"`
+	Status     string      `json:"status"`
+	RetryCount int         `json:"retry_count"`
+	FailedAt   time.Time   `json:"failed_at"`
 }
 
 // TaskCommand represent a task command object
@@ -33,6 +37,7 @@ type Channel struct {
 	OutputChan  chan Output   `json:"-"`
 }
 
+// Output 任务执行输出
 type Output struct {
 	ProcessID string
 	Task      Task

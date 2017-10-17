@@ -15,6 +15,7 @@ import (
 	redis "gopkg.in/redis.v5"
 )
 
+// TaskManager 任务管理器
 type TaskManager struct {
 	runtime *config.Runtime
 	client  *redis.Client

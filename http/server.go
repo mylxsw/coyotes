@@ -33,6 +33,11 @@ func StartHTTPServer(ctx context.Context) {
 	r.HandleFunc("/channels/{channel_name}/tasks", mw.Handler(handler.PushTask, mw.WithJSONResponse)).Methods("POST")
 	r.HandleFunc("/channels/{channel_name}/tasks/{task_id}", mw.Handler(handler.RemoveTask, mw.WithJSONResponse)).Methods("DELETE")
 
+	// 重试失败的任务
+	r.HandleFunc("/channels/{channel_name}/failed-tasks", mw.Handler(handler.FailedTasksInChannel, mw.WithJSONResponse)).Methods("GET")
+	r.HandleFunc("/channels/{channel_name}/failed-tasks/{task_id}", mw.Handler(handler.GetFailedTask, mw.WithJSONResponse)).Methods("GET")
+	r.HandleFunc("/channels/{channel_name}/failed-tasks/{task_id}", mw.Handler(handler.RetryTask, mw.WithJSONResponse)).Methods("POST")
+
 	srv := &http.Server{
 		Addr:    runtime.Config.HTTP.ListenAddr,
 		Handler: r,

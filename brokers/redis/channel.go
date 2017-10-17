@@ -18,7 +18,7 @@ type TaskChannel struct {
 	client        *redis.Client
 	channel       *brokers.Channel
 	workerCount   int
-	workerHandler func(command brokers.Task, processID string) bool
+	workerHandler func(command brokers.Task, processID string) (bool, error)
 }
 
 // CreateTaskChannel create a redis queue
@@ -54,6 +54,9 @@ func (queue *TaskChannel) Listen(ctx context.Context, dispose func()) {
 			close(queue.channel.Task)
 			return
 		default:
+			// 从队列中取出一个任务
+			// 1. 从TaskQueueKey中取出一个任务
+			// 2. 在TaskQueueExecKey这个Hash表中添加该任务，标识该任务正在执行
 			res, err := queue.client.BRPop(2*time.Second, TaskQueueKey(queue.channel.Name)).Result()
 			if err != nil {
 				continue
@@ -69,7 +72,7 @@ func (queue *TaskChannel) Listen(ctx context.Context, dispose func()) {
 }
 
 // RegisterWorker 注册worker来消费队列
-func (queue *TaskChannel) RegisterWorker(callback func(command brokers.Task, processID string) bool) {
+func (queue *TaskChannel) RegisterWorker(callback func(command brokers.Task, processID string) (bool, error)) {
 	queue.workerHandler = callback
 }
 
@@ -93,7 +96,9 @@ func (queue *TaskChannel) Work(dispose func()) {
 			func(task brokers.Task) {
 
 				startTime := time.Now()
+
 				// 执行结果，默认为false，失败
+				var taskErr error
 				isSuccess := false
 
 				// 删除用于去重的缓存key
@@ -116,6 +121,10 @@ func (queue *TaskChannel) Work(dispose func()) {
 						execKey,
 					)
 
+					// 任务执行完成后处理
+					// 1. 从TaskQueueDistinctKey中去除任务去重Key
+					// 2. 从TaskQueueExecKey中移除当前任务的ID，标识该任务已经执行结束
+
 					err := queue.client.Del(distinctKey).Err()
 					if err != nil {
 						log.Error(
@@ -137,6 +146,9 @@ func (queue *TaskChannel) Work(dispose func()) {
 						)
 					}
 
+					// 如果任务执行失败，则需要将其重新加入到失败任务队列
+					GetTaskManager().AddFailedTask(task)
+
 					log.Info(
 						"[%s] task [%s] time-consuming %v",
 						processID,
@@ -145,8 +157,9 @@ func (queue *TaskChannel) Work(dispose func()) {
 					)
 				}()
 
-				if queue.workerHandler(task, processID) {
-					isSuccess = true
+				// 执行取出的任务
+				if isSuccess, taskErr = queue.workerHandler(task, processID); taskErr != nil {
+					log.Error("[%s] task [%s] execute failed: %v", processID, task.TaskName, taskErr)
 				}
 			}(task)
 		}
