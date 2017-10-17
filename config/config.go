@@ -52,25 +52,15 @@ var runtime *Runtime
 func InitRuntime(
 	redisAddr string,
 	redisPassword string,
-	redisAddrDepressed string,
-	redisPasswordDepressed string,
 	pidFile string,
 	concurrent int,
 	redisDB int,
 	httpAddr string,
-	taskMode bool,
 	colorfulTTY bool,
 	defaultChannel string,
 	logFilename string,
 	debugMode bool,
 ) *Runtime {
-
-	if redisAddr == "127.0.0.1:6379" || redisAddr == "" {
-		redisAddr = redisAddrDepressed
-	}
-	if redisPassword == "" {
-		redisPassword = redisPasswordDepressed
-	}
 
 	runtime = &Runtime{
 		Config: Config{
@@ -84,7 +74,6 @@ func InitRuntime(
 			HTTP: HTTPConfig{
 				ListenAddr: httpAddr,
 			},
-			TaskMode:         taskMode,
 			ColorfulTTY:      colorfulTTY,
 			DefaultChannel:   defaultChannel,
 			ChannelCacheSize: 20,
