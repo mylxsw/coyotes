@@ -66,8 +66,9 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	var existence bool
 
 	task := brokers.Task{
-		TaskName: taskName,
-		Channel:  taskChannel,
+		TaskName:     taskName,
+		WriteBackend: true,
+		Channel:      taskChannel,
 		Command: brokers.TaskCommand{
 			Name: commandName,
 			Args: args,

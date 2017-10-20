@@ -200,11 +200,30 @@ func TransferPrepareTask(ctx context.Context) {
 
 			var task brokers.PrepareTask
 			if err := json.Unmarshal([]byte(res[1]), &task); err == nil {
-				GetTaskManager().AddTask(brokers.Task{
-					TaskName: task.Name,
-					Channel:  task.Channel,
-					Command:  task.Command,
-				})
+
+				if task.ExecuteAt <= time.Now().Unix() {
+					log.Info("transfer prepared task to queue: task_name=%s, channel=%s, command=%s", task.Name, task.Channel, task.Command.Format())
+
+					GetTaskManager().AddTask(brokers.Task{
+						TaskName:     task.Name,
+						Channel:      task.Channel,
+						Command:      task.Command,
+						WriteBackend: true,
+					})
+				} else {
+					executeAt := time.Unix(task.ExecuteAt, 0)
+
+					log.Info("transfer prepared task to delay queue: task_name=%s, channel=%s, command=%s, exec_at=%s", task.Name, task.Channel, task.Command, executeAt.Format(time.RFC3339))
+
+					GetTaskManager().AddDelayTask(executeAt, brokers.Task{
+						TaskName:     task.Name,
+						Channel:      task.Channel,
+						Command:      task.Command,
+						WriteBackend: true,
+					})
+				}
+			} else {
+				log.Error("parse prepared task failed: %v", err)
 			}
 		}
 	}

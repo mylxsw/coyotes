@@ -37,6 +37,11 @@ func StartTaskRunner(ctx context.Context, channel *brokers.Channel) {
 				task.FailedAt = time.Now()
 			}
 
+			// 每个任务都可以指定是否将执行结果写入后端存储
+			if !task.WriteBackend {
+				return
+			}
+
 			// 如果指定了后端存储，则需要记录执行结果
 			if driver := backend.Default(); driver != nil {
 				id, err := driver.Insert(task, backend.Result{

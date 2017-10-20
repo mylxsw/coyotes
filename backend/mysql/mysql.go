@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
-	"strings"
 
 	// 引入mysql驱动支持
 	_ "github.com/go-sql-driver/mysql"
@@ -52,7 +51,7 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 
 	res, err := stmt.Exec(
 		task.TaskName,
-		task.Command.Name+" "+strings.Join(task.Command.Args, " "),
+		task.Command.Format(),
 		task.Channel,
 		result.IsSuccessful,
 		task.RetryCount,
