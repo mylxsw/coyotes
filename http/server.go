@@ -37,6 +37,12 @@ func StartHTTPServer(ctx context.Context) {
 	r.HandleFunc("/channels/{channel_name}/failed-tasks", mw.Handler(handler.FailedTasksInChannel, mw.WithJSONResponse)).Methods("GET")
 	r.HandleFunc("/channels/{channel_name}/failed-tasks/{task_id}", mw.Handler(handler.GetFailedTask, mw.WithJSONResponse)).Methods("GET")
 	r.HandleFunc("/channels/{channel_name}/failed-tasks/{task_id}", mw.Handler(handler.RetryTask, mw.WithJSONResponse)).Methods("POST")
+	r.HandleFunc("/channels/{channel_name}/failed-tasks/{task_id}", mw.Handler(handler.RemoveFailedTask, mw.WithJSONResponse)).Methods("DELETE")
+
+	// 查询所有延迟任务
+	r.HandleFunc("/delay-tasks", mw.Handler(handler.GetDelayTasks, mw.WithJSONResponse)).Methods("GET")
+	r.HandleFunc("/delay-tasks/{task_id}", mw.Handler(handler.GetDelayTask, mw.WithJSONResponse)).Methods("GET")
+	r.HandleFunc("/delay-tasks/{task_id}", mw.Handler(handler.RemoveDelayTask, mw.WithJSONResponse)).Methods("DELETE")
 
 	srv := &http.Server{
 		Addr:    runtime.Config.HTTP.ListenAddr,

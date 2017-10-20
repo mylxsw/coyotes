@@ -1,8 +1,10 @@
 package config
 
 import (
+	"strings"
 	"time"
 
+	"github.com/mylxsw/coyotes/backend/mysql"
 	"github.com/mylxsw/coyotes/brokers"
 )
 
@@ -30,9 +32,10 @@ type Config struct {
 	ChannelCacheSize int
 	LogFilename      string
 	DebugMode        bool
+	BackendStorage   string // 执行结果存储方案
 }
 
-// 进程运行信息
+// Info 进程运行信息
 type Info struct {
 	StartedAt     time.Time // 开始运行时间
 	DealTaskCount int       // 启动以来执行的任务数目
@@ -49,6 +52,7 @@ type Runtime struct {
 
 var runtime *Runtime
 
+// InitRuntime init the configuration for app
 func InitRuntime(
 	redisAddr string,
 	redisPassword string,
@@ -63,6 +67,7 @@ func InitRuntime(
 	defaultChannel string,
 	logFilename string,
 	debugMode bool,
+	backendStorage string,
 ) *Runtime {
 
 	if redisAddr == "127.0.0.1:6379" || redisAddr == "" {
@@ -90,6 +95,7 @@ func InitRuntime(
 			ChannelCacheSize: 20,
 			LogFilename:      logFilename,
 			DebugMode:        debugMode,
+			BackendStorage:   backendStorage,
 		},
 		Channels: make(map[string]*brokers.Channel),
 		Info:     Info{},
@@ -98,6 +104,13 @@ func InitRuntime(
 	// 进程启动时间
 	runtime.Info.StartedAt = time.Now()
 
+	// 初始化后端存储
+	if backendStorage != "" && strings.HasPrefix(backendStorage, "mysql:") {
+		dataSource := backendStorage[6:]
+
+		mysql.Register("mysql", dataSource)
+		mysql.InitTableForMySQL(dataSource)
+	}
 	return runtime
 }
 

@@ -20,9 +20,11 @@ func Schedule(ctx context.Context) {
 
 	go func() {
 		for output := range outputChan {
-			log.Info(
-				"[%s] %s -> %s",
+			log.Debug(
+				"task output [%s]: process_id=%s, id=%s, name=%s, content=%s",
+				output.Type,
 				output.ProcessID,
+				output.Task.ID,
 				output.Task.TaskName,
 				output.Content,
 			)

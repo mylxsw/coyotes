@@ -51,7 +51,7 @@ func (manager *TaskManager) AddTask(task brokers.Task) (id string, existence boo
 		task.ID = generateUUID()
 	}
 
-	log.Info("add task: %s -> %s", task.TaskName, task.Channel)
+	log.Info("add task %s to queue %s: id=%s, name=%s, channel=%s, retry_count=%d", task.TaskName, task.Channel, task.ID, task.TaskName, task.Channel, task.RetryCount)
 
 	val, err := pushToQueueCmd.Run(
 		manager.client,

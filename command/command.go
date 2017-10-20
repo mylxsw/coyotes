@@ -14,11 +14,15 @@ import (
 	"github.com/mylxsw/coyotes/log"
 )
 
+// ShellCommand is a shell command to execute
 type ShellCommand struct {
 	output chan brokers.Output
 	task   brokers.Task
+	stdout string
+	stderr string
 }
 
+// CreateShellCommand create a shell command object
 func CreateShellCommand(task brokers.Task, outputChan chan brokers.Output) *ShellCommand {
 	return &ShellCommand{
 		output: outputChan,
@@ -73,11 +77,11 @@ func (self *ShellCommand) Execute(processID string) (bool, error) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		self.bindOutput(processID, &stdout)
+		self.bindOutput(processID, &stdout, "stdout")
 	}()
 	go func() {
 		defer wg.Done()
-		self.bindOutput(processID, &stderr)
+		self.bindOutput(processID, &stderr, "stderr")
 	}()
 
 	wg.Wait()
@@ -103,8 +107,18 @@ func (self *ShellCommand) Execute(processID string) (bool, error) {
 	return cmd.ProcessState.Success(), nil
 }
 
+// StdoutString return stdout string after command executed
+func (self *ShellCommand) StdoutString() string {
+	return self.stdout
+}
+
+// StderrString return stderr string after command executed
+func (self *ShellCommand) StderrString() string {
+	return self.stderr
+}
+
 // bindOutput 绑定标准输入、输出到输出channel
-func (self *ShellCommand) bindOutput(processID string, input *io.ReadCloser) error {
+func (self *ShellCommand) bindOutput(processID string, input *io.ReadCloser, inputType string) error {
 	reader := bufio.NewReader(*input)
 	for {
 		line, err := reader.ReadString('\n')
@@ -120,9 +134,17 @@ func (self *ShellCommand) bindOutput(processID string, input *io.ReadCloser) err
 			break
 		}
 
+		if inputType == "stdout" {
+			self.stdout += line
+		} else if inputType == "stderr" {
+			self.stderr += line
+		}
+
+		// 实时输出
 		self.output <- brokers.Output{
 			ProcessID: processID,
 			Task:      self.task,
+			Type:      inputType,
 			Content:   strings.TrimRight(line, "\n"),
 		}
 	}

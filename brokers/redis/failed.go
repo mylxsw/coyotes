@@ -13,6 +13,8 @@ func (manager *TaskManager) AddFailedTask(task brokers.Task) error {
 	task.RetryCount++
 	task.FailedAt = time.Now()
 
+	log.Info("add failed task: id=%s, name=%s, channel=%s, retry_count=%d", task.ID, task.TaskName, task.Channel, task.RetryCount)
+
 	return manager.client.HSet(TaskFailedQueueKey(task.Channel), task.ID, encodeTask(task)).Err()
 }
 
@@ -49,6 +51,7 @@ func (manager *TaskManager) RemoveFailedTask(channel string, taskID string) (bro
 	task, err := manager.GetFailedTask(channel, taskID)
 	if err == nil {
 		manager.client.HDel(taskFailedQueueKey, taskID)
+		log.Info("remove failed task: id=%s, name=%s, channel=%s, retry_count=%s", task.ID, task.TaskName, task.Channel, task.RetryCount)
 	}
 
 	return task, err
@@ -66,6 +69,9 @@ func (manager *TaskManager) RetryFailedTask(channel string, taskID string) error
 		log.Error("add task %s failed: %v", tk.ID, err)
 		return fmt.Errorf("add task %s failed: %v", tk.ID, err)
 	}
+
+	log.Info("retry failed task: id=%s, name=%s, channel=%s, retry_count=%s", tk.ID, tk.TaskName, tk.Channel, tk.RetryCount)
+
 	res := "add"
 	if existence {
 		res = "repeat"

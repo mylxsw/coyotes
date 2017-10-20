@@ -1,8 +1,9 @@
 package config
 
-// 当前版本
-const VERSION  = "v1.0"
+// VERSION 当前版本
+const VERSION = "v1.0"
 
+// WelcomeMessageStr is a message to show
 var WelcomeMessageStr = `
   ____                  _
  / ___|___  _   _  ___ | |_ ___  ___

@@ -17,6 +17,7 @@ type Task struct {
 	Command    TaskCommand `json:"command"`
 	Channel    string      `json:"channel"`
 	Status     string      `json:"status"`
+	ExecAt     time.Time   `json:"execute_at"`
 	RetryCount int         `json:"retry_count"`
 	FailedAt   time.Time   `json:"failed_at"`
 }
@@ -40,6 +41,7 @@ type Channel struct {
 // Output 任务执行输出
 type Output struct {
 	ProcessID string
+	Type      string // 输出类型: stdout/stderr
 	Task      Task
 	Content   string
 }

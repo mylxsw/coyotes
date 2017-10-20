@@ -147,7 +147,9 @@ func (queue *TaskChannel) Work(dispose func()) {
 					}
 
 					// 如果任务执行失败，则需要将其重新加入到失败任务队列
-					GetTaskManager().AddFailedTask(task)
+					if !isSuccess {
+						GetTaskManager().AddFailedTask(task)
+					}
 
 					log.Info(
 						"[%s] task [%s] time-consuming %v",

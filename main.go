@@ -35,6 +35,7 @@ var (
 	logFilename            string
 	debugMode              bool
 	daemonize              bool
+	backendStorage         string
 )
 
 func main() {
@@ -59,6 +60,7 @@ func main() {
 	flag.StringVar(&logFilename, "log-file", "", "日志文件存储路径，默认为空，直接输出到标准输出")
 	flag.BoolVar(&debugMode, "debug", false, "日志输出级别，默认为false，如果为true，则输出debug日志")
 	flag.BoolVar(&daemonize, "daemonize", false, "守护进程模式，模式为false")
+	flag.StringVar(&backendStorage, "backend-storage", "", "后端存储方式，用于存储任务执行结果，默认不存储")
 
 	flag.Parse()
 
@@ -92,6 +94,7 @@ func main() {
 		defaultChannel,
 		logFilename,
 		debugMode,
+		backendStorage,
 	)
 
 	if os.Getuid() == 0 {

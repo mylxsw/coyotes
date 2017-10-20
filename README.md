@@ -346,6 +346,86 @@ Coyotes提供了Restful风格的API用于对其进行管理。
         "data": null
     }
 
+### **GET /delay-tasks** 查询所有延迟任务
+
+### 响应示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": {
+            "0a360b99-4b22-4269-bdec-9331deb8425c": {
+                "task_id": "0a360b99-4b22-4269-bdec-9331deb8425c",
+                "task_name": "git-command",
+                "command": {
+                    "name": "git",
+                    "args": null
+                },
+                "channel": "default",
+                "status": "",
+                "execute_at": "2017-10-17T18:07:18.737976+08:00",
+                "retry_count": 0,
+                "failed_at": "0001-01-01T00:00:00Z"
+            }
+        }
+    }
+
+### **GET /delay-tasks/{task_id}** 查询某个延迟任务
+
+#### 请求参数
+
+| 参数 | 说明 |
+|---|---|
+| task_id | 任务ID |
+
+#### 响应示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": {
+            "task_id": "dcf8e5c8-3207-457d-b75c-23b4841734b4",
+            "task_name": "git-command",
+            "command": {
+                "name": "git",
+                "args": null
+            },
+            "channel": "default",
+            "status": "",
+            "execute_at": "2017-10-20T11:24:21.986208+08:00",
+            "retry_count": 0,
+            "failed_at": "0001-01-01T00:00:00Z"
+        }
+    }
+
+### **DELETE /delay-tasks/{task_id}** 删除某个延迟任务
+
+#### 请求参数
+
+| 参数 | 说明 |
+|---|---|
+| task_id | 任务ID |
+
+#### 响应示例
+
+    {
+        "status_code": 200,
+        "message": "ok",
+        "data": {
+            "task_id": "182e1598-4915-4510-b2a9-3f9db8706dfd",
+            "task_name": "git-command",
+            "command": {
+                "name": "git",
+                "args": null
+            },
+            "channel": "default",
+            "status": "",
+            "execute_at": "2017-10-20T11:26:26.180545+08:00",
+            "retry_count": 0,
+            "failed_at": "0001-01-01T00:00:00Z"
+        }
+    }
+
 ## 注意事项
 
 ### 安全问题

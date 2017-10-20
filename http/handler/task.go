@@ -16,40 +16,13 @@ import (
 	"github.com/mylxsw/coyotes/log"
 )
 
+// RemoveTask Remove specified task from task queue
 func RemoveTask(w http.ResponseWriter, r *http.Request) {
 
 	// vars := mux.Vars(r)
 	// channelName := vars["channel_name"]
 	// taskName := vars["task_id"]
 
-}
-
-// GetFailedTask 查询某个失败的任务
-func GetFailedTask(w http.ResponseWriter, r *http.Request) {
-	taskChannel := mux.Vars(r)["channel_name"]
-	taskID := mux.Vars(r)["task_id"]
-
-	var task brokers.Task
-	var err error
-	if task, err = broker.GetTaskManager().GetFailedTask(taskChannel, taskID); err != nil {
-		w.Write(response.Failed("任务不存在"))
-		return
-	}
-
-	w.Write(response.Success(task))
-}
-
-// RetryTask 重试失败的任务
-func RetryTask(w http.ResponseWriter, r *http.Request) {
-	taskChannel := mux.Vars(r)["channel_name"]
-	taskID := mux.Vars(r)["task_id"]
-
-	if err := broker.GetTaskManager().RetryFailedTask(taskChannel, taskID); err != nil {
-		w.Write(response.Failed("任务不存在"))
-		return
-	}
-
-	w.Write(response.Success(nil))
 }
 
 // PushTask 添加任务到任务队列
