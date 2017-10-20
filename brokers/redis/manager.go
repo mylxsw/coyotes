@@ -205,6 +205,7 @@ func TransferPrepareTask(ctx context.Context) {
 					log.Info("transfer prepared task to queue: task_name=%s, channel=%s, command=%s", task.Name, task.Channel, task.Command.Format())
 
 					GetTaskManager().AddTask(brokers.Task{
+						ID:           task.ID,
 						TaskName:     task.Name,
 						Channel:      task.Channel,
 						Command:      task.Command,
@@ -216,6 +217,7 @@ func TransferPrepareTask(ctx context.Context) {
 					log.Info("transfer prepared task to delay queue: task_name=%s, channel=%s, command=%s, exec_at=%s", task.Name, task.Channel, task.Command, executeAt.Format(time.RFC3339))
 
 					GetTaskManager().AddDelayTask(executeAt, brokers.Task{
+						ID:           task.ID,
 						TaskName:     task.Name,
 						Channel:      task.Channel,
 						Command:      task.Command,

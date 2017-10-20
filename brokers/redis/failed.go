@@ -50,7 +50,7 @@ func (manager *TaskManager) GetFailedTask(channel, taskID string) (brokers.Task,
 func (manager *TaskManager) RemoveFailedTask(channel string, taskID string) (brokers.Task, error) {
 	task, err := manager.GetFailedTask(channel, taskID)
 	if err == nil {
-		manager.client.HDel(taskFailedQueueKey, taskID)
+		manager.client.HDel(TaskFailedQueueKey(channel), taskID)
 		log.Info("remove failed task: id=%s, name=%s, channel=%s, retry_count=%s", task.ID, task.TaskName, task.Channel, task.RetryCount)
 	}
 

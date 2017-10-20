@@ -7,6 +7,7 @@ import (
 
 // PrepareTask is the task that prepared to join queue
 type PrepareTask struct {
+	ID        string      `json:"id"`
 	Name      string      `json:"task"`
 	Command   TaskCommand `json:"command"`
 	Channel   string      `json:"chan"`

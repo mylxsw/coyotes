@@ -27,6 +27,7 @@ func RemoveTask(w http.ResponseWriter, r *http.Request) {
 
 // PushTask 添加任务到任务队列
 // 参数：
+//    id           任务ID，可以不指定，系统自动生成
 //    task         任务名称，不能为空，用于唯一标识一个任务
 //    channel_name 任务执行channel，标识任务在哪个channel中执行，如果不指定则在默认的channel中执行
 //    delay        如果需要延迟执行，这里指定延迟的秒数，0为不延迟执行
@@ -37,6 +38,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	taskChannel := mux.Vars(r)["channel_name"]
 	delaySec, _ := strconv.Atoi(r.PostFormValue("delay"))
 	commandName := r.PostFormValue("command")
+	id := r.PostFormValue("id")
 
 	var args []string
 	for key, values := range r.PostForm {
@@ -66,6 +68,7 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 	var existence bool
 
 	task := brokers.Task{
+		ID:           id,
 		TaskName:     taskName,
 		WriteBackend: true,
 		Channel:      taskChannel,
