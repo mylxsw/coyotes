@@ -43,7 +43,7 @@ func (manager *TaskManager) Close() {
 // AddTask 用于将任务加入到Channel
 func (manager *TaskManager) AddTask(task brokers.Task) (id string, existence bool, err error) {
 	if _, ok := manager.runtime.Channels[task.Channel]; !ok {
-		return "", false, fmt.Errorf("task channel [%s] not exist", task.TaskName)
+		return "", false, fmt.Errorf("task channel [%s] not exist", task.Channel)
 	}
 
 	//  如果没有指定任务ID，则自动生成
@@ -204,25 +204,29 @@ func TransferPrepareTask(ctx context.Context) {
 				if task.ExecuteAt <= time.Now().Unix() {
 					log.Info("transfer prepared task to queue: task_name=%s, channel=%s, command=%s", task.Name, task.Channel, task.Command.Format())
 
-					GetTaskManager().AddTask(brokers.Task{
+					if _, _, err = GetTaskManager().AddTask(brokers.Task{
 						ID:           task.ID,
 						TaskName:     task.Name,
 						Channel:      task.Channel,
 						Command:      task.Command,
 						WriteBackend: true,
-					})
+					}); err != nil {
+						log.Error("add task [%s] to queue [%s] failed: %v", task.ID, task.Channel, err)
+					}
 				} else {
 					executeAt := time.Unix(task.ExecuteAt, 0)
 
 					log.Info("transfer prepared task to delay queue: task_name=%s, channel=%s, command=%s, exec_at=%s", task.Name, task.Channel, task.Command, executeAt.Format(time.RFC3339))
 
-					GetTaskManager().AddDelayTask(executeAt, brokers.Task{
+					if _, _, err = GetTaskManager().AddDelayTask(executeAt, brokers.Task{
 						ID:           task.ID,
 						TaskName:     task.Name,
 						Channel:      task.Channel,
 						Command:      task.Command,
 						WriteBackend: true,
-					})
+					}); err != nil {
+						log.Error("add task [%s] to delay queue [%s] failed: %v", task.ID, task.Channel, err)
+					}
 				}
 			} else {
 				log.Error("parse prepared task failed: %v", err)

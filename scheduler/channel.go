@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/mylxsw/coyotes/brokers"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
-	"github.com/mylxsw/coyotes/brokers"
 )
 
 // InitChannels init all channels
@@ -31,8 +31,8 @@ func GetChannels() map[string]*brokers.Channel {
 		os.Exit(2)
 	}
 
-	// 默认三个channel： default, biz, cron
-	for _, ch := range []string{runtime.Config.DefaultChannel, "biz", "cron"} {
+	// 默认三个channel： default, biz, cron, delayed
+	for _, ch := range []string{runtime.Config.DefaultChannel, "biz", "cron", "delayed"} {
 		if _, ok := channels[ch]; ok {
 			continue
 		}
