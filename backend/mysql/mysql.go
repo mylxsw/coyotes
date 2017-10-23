@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"time"
 
-	// 引入mysql驱动支持
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/mylxsw/coyotes/backend"
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/log"
 )
 
 // Storage 使用MySQL为存储引擎
@@ -43,13 +43,9 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 		failedAt = "'" + task.FailedAt.Format("2006-01-02 15:04:05") + "'"
 	}
 
-	stmt, err := s.db.Prepare(fmt.Sprintf("INSERT INTO histories (task_name, command, channel, status, execute_at, retry_cnt, failed_at, stdout, stderr, created_at) VALUES(?, ?, ?, ?, %s, ?, %s, ?, ?, CURRENT_TIMESTAMP)", executeAt, failedAt))
-	if err != nil {
-		return "", fmt.Errorf("Prepare Error: %v", err)
-	}
-	defer stmt.Close()
+	insertSQL := fmt.Sprintf("INSERT INTO histories (task_name, command, channel, status, execute_at, retry_cnt, failed_at, stdout, stderr, created_at) VALUES(?, ?, ?, ?, %s, ?, %s, ?, ?, CURRENT_TIMESTAMP)", executeAt, failedAt)
 
-	res, err := stmt.Exec(
+	args := []interface{}{
 		task.TaskName,
 		task.Command.Format(),
 		task.Channel,
@@ -57,12 +53,35 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 		task.RetryCount,
 		result.Stdout,
 		result.Stderr,
-	)
+	}
+
+	stmt, err := s.db.Prepare(insertSQL)
+	if err != nil {
+		return "", fmt.Errorf("Prepare Error: %v", err)
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(args...)
 	if err != nil {
 		return "", fmt.Errorf("Insert Failed: %v", err)
 	}
 
+	log.Debug("mysql: sql=%s", insertSQL)
+
 	lastInsertID, _ := res.LastInsertId()
 
 	return strconv.Itoa(int(lastInsertID)), nil
+}
+
+// ClearExpired 清理过期的历史记录
+func (s *Storage) ClearExpired(beforeTime time.Time) (cnt int64, err error) {
+	deleteSQL := fmt.Sprintf("DELETE FROM histories WHERE created_at < '%s'", beforeTime.Format("2006-01-02 15:04:05"))
+	res, err := s.db.Exec(deleteSQL)
+	if err != nil {
+		return
+	}
+
+	log.Debug("mysql: sql=%s", deleteSQL)
+
+	return res.RowsAffected()
 }

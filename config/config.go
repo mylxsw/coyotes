@@ -1,10 +1,8 @@
 package config
 
 import (
-	"strings"
 	"time"
 
-	"github.com/mylxsw/coyotes/backend/mysql"
 	"github.com/mylxsw/coyotes/brokers"
 )
 
@@ -33,6 +31,7 @@ type Config struct {
 	LogFilename      string
 	DebugMode        bool
 	BackendStorage   string // 执行结果存储方案
+	BackendKeepDays  int    // 后端存储保留天数
 }
 
 // Info 进程运行信息
@@ -68,6 +67,7 @@ func InitRuntime(
 	logFilename string,
 	debugMode bool,
 	backendStorage string,
+	backendKeepDays int,
 ) *Runtime {
 
 	if redisAddr == "127.0.0.1:6379" || redisAddr == "" {
@@ -96,6 +96,7 @@ func InitRuntime(
 			LogFilename:      logFilename,
 			DebugMode:        debugMode,
 			BackendStorage:   backendStorage,
+			BackendKeepDays:  backendKeepDays,
 		},
 		Channels: make(map[string]*brokers.Channel),
 		Info:     Info{},
@@ -104,13 +105,6 @@ func InitRuntime(
 	// 进程启动时间
 	runtime.Info.StartedAt = time.Now()
 
-	// 初始化后端存储
-	if backendStorage != "" && strings.HasPrefix(backendStorage, "mysql:") {
-		dataSource := backendStorage[6:]
-
-		mysql.Register("mysql", dataSource)
-		mysql.InitTableForMySQL(dataSource)
-	}
 	return runtime
 }
 

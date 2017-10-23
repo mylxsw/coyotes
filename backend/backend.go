@@ -4,13 +4,17 @@ import (
 	"fmt"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/mylxsw/coyotes/brokers"
 )
 
 // Driver 后端存储接口
 type Driver interface {
+	// Insert 插入执行结果到数据库
 	Insert(task brokers.Task, result Result) (ID string, err error)
+	// ClearExpired 清理过期的历史记录
+	ClearExpired(beforeTime time.Time) (cnt int64, err error)
 }
 
 // Result 任务执行后的结果

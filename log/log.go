@@ -1,11 +1,11 @@
 package log
 
 import (
-	"github.com/op/go-logging"
 	"io"
-	"github.com/mylxsw/coyotes/config"
-)
 
+	"github.com/mylxsw/coyotes/config"
+	"github.com/op/go-logging"
+)
 
 var log = logging.MustGetLogger("coyotes")
 

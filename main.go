@@ -5,8 +5,13 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 	"sync"
+	"time"
 
+	"github.com/mylxsw/coyotes/backend"
+	"github.com/mylxsw/coyotes/backend/mysql"
 	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/console"
 	"github.com/mylxsw/coyotes/log"
@@ -14,8 +19,7 @@ import (
 	"github.com/mylxsw/coyotes/scheduler"
 	"github.com/mylxsw/coyotes/signal"
 
-	"os/exec"
-
+	_ "github.com/go-sql-driver/mysql"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
 	server "github.com/mylxsw/coyotes/http"
 )
@@ -36,6 +40,7 @@ var (
 	debugMode              bool
 	daemonize              bool
 	backendStorage         string
+	backendKeepDays        int
 )
 
 func main() {
@@ -61,6 +66,7 @@ func main() {
 	flag.BoolVar(&debugMode, "debug", false, "日志输出级别，默认为false，如果为true，则输出debug日志")
 	flag.BoolVar(&daemonize, "daemonize", false, "守护进程模式，模式为false")
 	flag.StringVar(&backendStorage, "backend-storage", "", "后端存储方式，用于存储任务执行结果，默认不存储")
+	flag.IntVar(&backendKeepDays, "backend-keep-days", 0, "后端存储历史保留天数，0为永久保留")
 
 	flag.Parse()
 
@@ -95,12 +101,13 @@ func main() {
 		logFilename,
 		debugMode,
 		backendStorage,
+		backendKeepDays,
 	)
 
 	if os.Getuid() == 0 {
 		fmt.Println(console.ColorfulText(
 			console.TextYellow,
-			"\n当前以root(%s)用户执行，使用root权限执行可能会造成严重的安全问题，建议使用非root用户执行\n",
+			"\n当前以root用户执行，使用root权限执行可能会造成严重的安全问题，建议使用非root用户执行\n",
 		))
 	}
 
@@ -142,6 +149,33 @@ func main() {
 
 	// 初始化所有channel
 	scheduler.InitChannels()
+
+	// 初始化后端存储
+	backendStorage := runtime.Config.BackendStorage
+	if backendStorage != "" && strings.HasPrefix(backendStorage, "mysql:") {
+		dataSource := backendStorage[6:]
+
+		mysql.Register("mysql", dataSource)
+		mysql.InitTableForMySQL(dataSource)
+
+		// 自动清理过期的后端存储日志
+		if runtime.Config.BackendKeepDays > 0 {
+			go func() {
+				for _ = range time.Tick(1 * time.Minute) {
+					beforeTime := time.Now().AddDate(0, 0, -runtime.Config.BackendKeepDays)
+					if driver := backend.Default(); driver != nil {
+						affectRows, err := driver.ClearExpired(beforeTime)
+						if err != nil {
+							log.Error("backend clear hisories failed: %v", err)
+							return
+						}
+
+						log.Debug("backend clear histories, affected %d rows", affectRows)
+					}
+				}
+			}()
+		}
+	}
 
 	var wg sync.WaitGroup
 

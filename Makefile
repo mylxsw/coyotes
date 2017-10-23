@@ -1,7 +1,7 @@
 run:build-mac
 	./bin/coyotes -colorful-tty=true -debug=true
 run-with-backend:build-mac
-	./bin/coyotes -colorful-tty=true -debug=true -backend-storage="mysql:root:@tcp(127.0.0.1:3306)/coyotes?charset=utf8&parseTime=True&loc=Local"
+	./bin/coyotes -colorful-tty=true -debug=true -backend-storage="mysql:root:@tcp(127.0.0.1:3306)/coyotes?charset=utf8&parseTime=True&loc=Local" -backend-keep-days=1
 run-no-worker:build-mac
 	./bin/coyotes -colorful-tty=true -task-mode=false -debug=true
 run-redis-230:build-mac
