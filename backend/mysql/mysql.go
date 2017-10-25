@@ -51,8 +51,8 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 		task.Channel,
 		result.IsSuccessful,
 		task.RetryCount,
-		result.Stdout,
-		result.Stderr,
+		truncateLongString(result.Stdout, 20000),
+		truncateLongString(result.Stderr, 20000),
 	}
 
 	stmt, err := s.db.Prepare(insertSQL)
@@ -84,4 +84,13 @@ func (s *Storage) ClearExpired(beforeTime time.Time) (cnt int64, err error) {
 	log.Debug("mysql: sql=%s", deleteSQL)
 
 	return res.RowsAffected()
+}
+
+// truncateLongString 长字符串截断
+func truncateLongString(str string, maxLength int) string {
+	if len(str) > maxLength {
+		return str[len(str)-maxLength:]
+	}
+
+	return str
 }

@@ -74,7 +74,14 @@ func PushTask(w http.ResponseWriter, r *http.Request) {
 		Channel:      taskChannel,
 		Command: brokers.TaskCommand{
 			Name: commandName,
-			Args: args,
+			Args: func() []interface{} {
+				res := make([]interface{}, len(args))
+				for i, s := range args {
+					res[i] = s
+				}
+
+				return res
+			}(),
 		},
 	}
 

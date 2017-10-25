@@ -1,6 +1,7 @@
 package brokers
 
 import (
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,8 +31,8 @@ type Task struct {
 
 // TaskCommand represent a task command object
 type TaskCommand struct {
-	Name string   `json:"name"`
-	Args []string `json:"args"`
+	Name string        `json:"name"`
+	Args []interface{} `json:"args"`
 }
 
 // Channel is the command queue
@@ -54,5 +55,21 @@ type Output struct {
 
 // Format format command struct to string
 func (cmd TaskCommand) Format() string {
-	return cmd.Name + " " + strings.Join(cmd.Args, " ")
+	return cmd.Name + " " + strings.Join(cmd.GetArgsString(), " ")
+}
+
+// GetArgsString 以字符串数组的形式返回参数集合
+func (cmd TaskCommand) GetArgsString() []string {
+	res := make([]string, len(cmd.Args))
+
+	for i, s := range cmd.Args {
+		switch s.(type) {
+		case string:
+			res[i] = s.(string)
+		case float64:
+			res[i] = strconv.FormatFloat(s.(float64), 'f', -1, 64)
+		}
+	}
+
+	return res
 }

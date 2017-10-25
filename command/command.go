@@ -43,7 +43,7 @@ func (self *ShellCommand) Execute(processID string) (bool, error) {
 		cmdArgs = params[1:]
 	} else {
 		cmdName = self.task.Command.Name
-		cmdArgs = self.task.Command.Args
+		cmdArgs = self.task.Command.GetArgsString()
 	}
 
 	cmd := exec.Command(cmdName, cmdArgs...)
