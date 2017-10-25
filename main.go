@@ -161,7 +161,7 @@ func main() {
 		// 自动清理过期的后端存储日志
 		if runtime.Config.BackendKeepDays > 0 {
 			go func() {
-				for _ = range time.Tick(1 * time.Minute) {
+				for _ = range time.Tick(5 * time.Minute) {
 					beforeTime := time.Now().AddDate(0, 0, -runtime.Config.BackendKeepDays)
 					if driver := backend.Default(); driver != nil {
 						affectRows, err := driver.ClearExpired(beforeTime)
