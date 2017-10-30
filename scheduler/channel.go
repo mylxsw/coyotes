@@ -43,6 +43,11 @@ func GetChannels() map[string]*brokers.Channel {
 			WorkerCount: runtime.Config.Concurrent,
 		}
 
+		// 延迟队列不去重
+		if ch == "delayed" {
+			channels[ch].Distinct = false
+		}
+
 		broker.GetTaskManager().AddChannel(channels[ch])
 	}
 

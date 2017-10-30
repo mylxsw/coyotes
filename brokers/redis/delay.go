@@ -15,6 +15,9 @@ import (
 
 // AddDelayTask 新增一个延时任务到队列
 func (manager *TaskManager) AddDelayTask(execTime time.Time, task brokers.Task) (id string, existence bool, err error) {
+	// 延迟任务自动加入到延迟任务队列
+	task.Channel = "delayed"
+
 	if _, ok := manager.runtime.Channels[task.Channel]; !ok {
 		return "", false, fmt.Errorf("task channel [%s] not exist", task.TaskName)
 	}
