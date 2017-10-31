@@ -2,6 +2,7 @@ package redis
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"context"
@@ -14,11 +15,12 @@ import (
 
 // TaskChannel is the queue object for redis broker
 type TaskChannel struct {
-	runtime       *config.Runtime
-	client        *redis.Client
-	channel       *brokers.Channel
-	workerCount   int
-	workerHandler func(command brokers.Task, processID string) (bool, error)
+	runtime        *config.Runtime
+	client         *redis.Client
+	channel        *brokers.Channel
+	workerCount    int
+	workerCountMux sync.Mutex
+	workerHandler  func(command brokers.Task, processID string) (bool, error)
 }
 
 // CreateTaskChannel create a redis queue
@@ -76,12 +78,21 @@ func (queue *TaskChannel) RegisterWorker(callback func(command brokers.Task, pro
 	queue.workerHandler = callback
 }
 
+// NewWorkerProcessID 为worker分配ID
+func (queue *TaskChannel) NewWorkerProcessID() string {
+	queue.workerCountMux.Lock()
+	defer queue.workerCountMux.Unlock()
+
+	queue.workerCount++
+
+	return fmt.Sprintf("%s %d", queue.channel.Name, queue.workerCount)
+}
+
 // Work 执行消费者worker
 func (queue *TaskChannel) Work(dispose func()) {
 	defer dispose()
 
-	queue.workerCount++
-	processID := fmt.Sprintf("%s %d", queue.channel.Name, queue.workerCount)
+	processID := queue.NewWorkerProcessID()
 
 	log.Debug("worker [%s] started.", processID)
 	defer log.Debug("worker [%s] stopped.", processID)
