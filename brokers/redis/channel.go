@@ -135,27 +135,28 @@ func (queue *TaskChannel) Work(dispose func()) {
 					// 任务执行完成后处理
 					// 1. 从TaskQueueDistinctKey中去除任务去重Key
 					// 2. 从TaskQueueExecKey中移除当前任务的ID，标识该任务已经执行结束
-
-					err := queue.client.Del(distinctKey).Err()
-					if err != nil {
+					Retry(func(rt int) error {
+						return queue.client.Del(distinctKey).Err()
+					}, 3).Failed(func(err error) {
 						log.Error(
 							"[%s] delete key %s failed: %v",
 							processID,
 							distinctKey,
 							err,
 						)
-					}
+					}).RunAsync()
 
-					err = queue.client.HDel(execKey, task.ID).Err()
-					if err != nil {
+					Retry(func(rt int) error {
+						return queue.client.HDel(execKey, task.ID).Err()
+					}, 3).Failed(func(err error) {
 						log.Error(
-							"[%s] remove key %s from %s: %v",
+							"[%s] remove key %s from %s failed: %v",
 							processID,
 							task.TaskName,
 							execKey,
 							err,
 						)
-					}
+					}).RunAsync()
 
 					// 如果任务执行失败，则需要将其重新加入到失败任务队列
 					if !isSuccess {
