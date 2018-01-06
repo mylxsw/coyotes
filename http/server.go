@@ -1,9 +1,8 @@
 package http
 
 import (
+	"net"
 	"net/http"
-
-	"context"
 
 	"github.com/gorilla/mux"
 	"github.com/mylxsw/coyotes/config"
@@ -13,7 +12,7 @@ import (
 )
 
 // StartHTTPServer start an http server instance serving for api request
-func StartHTTPServer(ctx context.Context) {
+func StartHTTPServer(l net.Listener) {
 	runtime := config.GetRuntime()
 
 	r := mux.NewRouter()
@@ -44,20 +43,8 @@ func StartHTTPServer(ctx context.Context) {
 	r.HandleFunc("/delay-tasks/{task_id}", mw.Handler(handler.GetDelayTask, mw.WithJSONResponse)).Methods("GET")
 	r.HandleFunc("/delay-tasks/{task_id}", mw.Handler(handler.RemoveDelayTask, mw.WithJSONResponse)).Methods("DELETE")
 
-	srv := &http.Server{
-		Addr:    runtime.Config.HTTP.ListenAddr,
-		Handler: r,
-	}
-
-	go func() {
-		select {
-		case <-ctx.Done():
-			srv.Shutdown(ctx)
-		}
-	}()
-
 	log.Debug("http listening on %s", runtime.Config.HTTP.ListenAddr)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := http.Serve(l, r); err != nil {
 		log.Warning("http server stopped: %v", err)
 	}
 }

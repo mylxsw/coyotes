@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"html/template"
@@ -88,7 +89,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}{
 		Welcome: config.WelcomeMessageStr,
 		Items: map[string]string{
-			"版本":     config.VERSION,
+			"版本":     fmt.Sprintf("%s(Build %s)", config.VERSION, runtime.BuildID),
 			"启动时间":   runtime.Info.StartedAt.Format("2006-01-02 15:04:05"),
 			"已执行任务数": strconv.Itoa(runtime.Info.DealTaskCount),
 			"成功任务数":  strconv.Itoa(runtime.Info.SuccTaskCount),

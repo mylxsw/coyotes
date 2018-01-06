@@ -10,6 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jpillora/overseer/fetcher"
+
+	"github.com/jpillora/overseer"
+
 	"github.com/mylxsw/coyotes/backend"
 	"github.com/mylxsw/coyotes/backend/mysql"
 	"github.com/mylxsw/coyotes/config"
@@ -17,7 +21,8 @@ import (
 	"github.com/mylxsw/coyotes/log"
 	"github.com/mylxsw/coyotes/pidfile"
 	"github.com/mylxsw/coyotes/scheduler"
-	"github.com/mylxsw/coyotes/signal"
+
+	sysRuntime "runtime"
 
 	_ "github.com/go-sql-driver/mysql"
 	broker "github.com/mylxsw/coyotes/brokers/redis"
@@ -41,7 +46,10 @@ var (
 	daemonize              bool
 	backendStorage         string
 	backendKeepDays        int
+	fetchUpdateURL         string
 )
+
+var BuildID = "0"
 
 func main() {
 
@@ -67,6 +75,7 @@ func main() {
 	flag.BoolVar(&daemonize, "daemonize", false, "守护进程模式，模式为false")
 	flag.StringVar(&backendStorage, "backend-storage", "", "后端存储方式，用于存储任务执行结果，默认不存储")
 	flag.IntVar(&backendKeepDays, "backend-keep-days", 0, "后端存储历史保留天数，0为永久保留")
+	flag.StringVar(&fetchUpdateURL, "update-check-url", "https://aicode.cc/open-api/coyotes/update/coyotes-%s-%s", "自动更新检查地址")
 
 	flag.Parse()
 
@@ -111,19 +120,35 @@ func main() {
 		))
 	}
 
+	overseer.Run(overseer.Config{
+		Program: mainProcess,
+		Address: runtime.Config.HTTP.ListenAddr,
+		Debug:   runtime.Config.DebugMode,
+		Fetcher: &fetcher.HTTP{
+			URL:      fmt.Sprintf(fetchUpdateURL, sysRuntime.GOOS, sysRuntime.GOARCH),
+			Interval: 5 * time.Second,
+		},
+	})
+}
+
+func mainProcess(state overseer.State) {
+
+	runtime := config.GetRuntime()
+	runtime.BuildID = BuildID
+
 	// 初始化日志输出
 	// 指定日志文件时，使用日志文件输出，否则输出到标准输出
-	if logFilename != "" {
-		logFile, err := os.OpenFile(logFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+	if runtime.Config.LogFilename != "" {
+		logFile, err := os.OpenFile(runtime.Config.LogFilename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
-			fmt.Printf("open log file %s failed: %v\n", logFilename, err)
+			fmt.Printf("open log file %s failed: %v\n", runtime.Config.LogFilename, err)
 			os.Exit(2)
 		}
 		defer logFile.Close()
 
-		log.InitLogger(logFile, debugMode)
+		log.InitLogger(logFile, debugMode, "coyotes#"+BuildID)
 	} else {
-		log.InitLogger(os.Stdout, debugMode)
+		log.InitLogger(os.Stdout, debugMode, "coyotes#"+BuildID)
 	}
 
 	// 创建进程pid文件
@@ -145,7 +170,12 @@ func main() {
 
 	// 信号处理程序，接收退出信号，平滑退出进程
 	ctx, cancel := context.WithCancel(context.Background())
-	signal.InitSignalReceiver(ctx, cancel)
+	// signal.InitSignalReceiver(ctx, cancel)
+
+	go func() {
+		<-state.GracefulShutdown
+		cancel()
+	}()
 
 	// 初始化所有channel
 	scheduler.InitChannels()
@@ -183,7 +213,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server.StartHTTPServer(ctx)
+		server.StartHTTPServer(state.Listener)
 	}()
 
 	// 启动待执行任务转移任务

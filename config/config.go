@@ -47,6 +47,7 @@ type Runtime struct {
 	Config   Config
 	Channels map[string]*brokers.Channel
 	Info     Info
+	BuildID  string
 }
 
 var runtime *Runtime

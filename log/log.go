@@ -12,12 +12,12 @@ var log = logging.MustGetLogger("coyotes")
 var DebugMode bool
 
 // InitLogger 用来初始化日志输出文件
-func InitLogger(logFile io.Writer, debugMode bool) {
+func InitLogger(logFile io.Writer, debugMode bool, buildID string) {
 	var format string
 	if config.GetRuntime().Config.ColorfulTTY {
-		format = "%{time:2006-01-02 15:04:05} %{color}[%{level}]%{color:reset} %{message}"
+		format = "%{time:2006-01-02 15:04:05} " + buildID + " %{color}[%{level}]%{color:reset} %{message}"
 	} else {
-		format = "%{time:2006-01-02 15:04:05} [%{level}] %{message}"
+		format = "%{time:2006-01-02 15:04:05} " + buildID + " [%{level}] %{message}"
 	}
 
 	logging.SetBackend(
