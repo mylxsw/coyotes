@@ -47,6 +47,8 @@ var (
 	backendStorage         string
 	backendKeepDays        int
 	fetchUpdateURL         string
+	autoUpdate             bool
+	updateInterval         int
 )
 
 var BuildID = "0"
@@ -75,6 +77,8 @@ func main() {
 	flag.BoolVar(&daemonize, "daemonize", false, "守护进程模式，模式为false")
 	flag.StringVar(&backendStorage, "backend-storage", "", "后端存储方式，用于存储任务执行结果，默认不存储")
 	flag.IntVar(&backendKeepDays, "backend-keep-days", 0, "后端存储历史保留天数，0为永久保留")
+	flag.BoolVar(&autoUpdate, "update-auto", false, "是否启用自动更新")
+	flag.IntVar(&updateInterval, "update-check-interval", 5, "自动更新频率，单位秒")
 	flag.StringVar(&fetchUpdateURL, "update-check-url", "https://aicode.cc/open-api/coyotes/update/coyotes-%s-%s", "自动更新检查地址")
 
 	flag.Parse()
@@ -120,15 +124,21 @@ func main() {
 		))
 	}
 
-	overseer.Run(overseer.Config{
+	overseerConfig := overseer.Config{
 		Program: mainProcess,
 		Address: runtime.Config.HTTP.ListenAddr,
 		Debug:   runtime.Config.DebugMode,
-		Fetcher: &fetcher.HTTP{
+	}
+
+	// 是否启用自动更新
+	if autoUpdate {
+		overseerConfig.Fetcher = &fetcher.HTTP{
 			URL:      fmt.Sprintf(fetchUpdateURL, sysRuntime.GOOS, sysRuntime.GOARCH),
-			Interval: 5 * time.Second,
-		},
-	})
+			Interval: time.Duration(updateInterval) * time.Second,
+		}
+	}
+
+	overseer.Run(overseerConfig)
 }
 
 func mainProcess(state overseer.State) {
