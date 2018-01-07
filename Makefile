@@ -1,4 +1,4 @@
-BUILD_TIME=$(shell TZ=CST date -u "+%Y%m%d%H%M%S")
+BUILD_TIME=$(shell date -u "+%Y%m%d%H%M%S")
 
 run:build-mac
 	./bin/coyotes -colorful-tty=true -debug=true
