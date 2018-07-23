@@ -8,6 +8,7 @@ import (
 
 	"github.com/mylxsw/coyotes/backend"
 	"github.com/mylxsw/coyotes/brokers"
+	"github.com/mylxsw/coyotes/config"
 	"github.com/mylxsw/coyotes/log"
 )
 
@@ -43,9 +44,10 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 		failedAt = "'" + task.FailedAt.Format("2006-01-02 15:04:05") + "'"
 	}
 
-	insertSQL := fmt.Sprintf("INSERT INTO histories (task_name, command, channel, status, execute_at, retry_cnt, failed_at, stdout, stderr, created_at) VALUES(?, ?, ?, ?, %s, ?, %s, ?, ?, CURRENT_TIMESTAMP)", executeAt, failedAt)
+	insertSQL := fmt.Sprintf("INSERT INTO histories (biz_name, task_name, command, channel, status, execute_at, retry_cnt, failed_at, stdout, stderr, created_at) VALUES(?, ?, ?, ?, ?, %s, ?, %s, ?, ?, CURRENT_TIMESTAMP)", executeAt, failedAt)
 
 	args := []interface{}{
+		config.GetRuntime().Config.BizName,
 		task.TaskName,
 		task.Command.Format(),
 		task.Channel,
@@ -75,7 +77,7 @@ func (s *Storage) Insert(task brokers.Task, result backend.Result) (ID string, e
 
 // ClearExpired 清理过期的历史记录
 func (s *Storage) ClearExpired(beforeTime time.Time) (cnt int64, err error) {
-	deleteSQL := fmt.Sprintf("DELETE FROM histories WHERE created_at < '%s'", beforeTime.Format("2006-01-02 15:04:05"))
+	deleteSQL := fmt.Sprintf("DELETE FROM histories WHERE biz_name = '%s' and created_at < '%s'", config.GetRuntime().Config.BizName, beforeTime.Format("2006-01-02 15:04:05"))
 	res, err := s.db.Exec(deleteSQL)
 	if err != nil {
 		return

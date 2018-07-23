@@ -30,6 +30,7 @@ import (
 )
 
 var (
+	bizName                string
 	redisAddr              string
 	redisPassword          string
 	redisDB                int
@@ -61,6 +62,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 
+	flag.StringVar(&bizName, "biz-name", "", "业务名称，使用英文字符串")
 	flag.StringVar(&redisAddr, "redis-host", "127.0.0.1:6379", "redis连接地址，必须指定端口")
 	flag.StringVar(&redisPassword, "redis-password", "", "redis连接密码")
 	flag.IntVar(&redisDB, "redis-db", 0, "redis默认数据库0-15")
@@ -83,6 +85,11 @@ func main() {
 
 	flag.Parse()
 
+	if bizName == "" {
+		log.Error("业务名称不能为空")
+		os.Exit(2)
+	}
+
 	// 如果是守护进程模式，则创建子进程，退出父进程
 	if daemonize && os.Getppid() != 1 {
 		binary, err := exec.LookPath(os.Args[0])
@@ -100,6 +107,7 @@ func main() {
 	}
 
 	runtime := config.InitRuntime(
+		bizName,
 		redisAddr,
 		redisPassword,
 		redisAddrDepressed,
@@ -201,7 +209,7 @@ func mainProcess(state overseer.State) {
 		// 自动清理过期的后端存储日志
 		if runtime.Config.BackendKeepDays > 0 {
 			go func() {
-				for _ = range time.Tick(5 * time.Minute) {
+				for range time.Tick(5 * time.Minute) {
 					beforeTime := time.Now().AddDate(0, 0, -runtime.Config.BackendKeepDays)
 					if driver := backend.Default(); driver != nil {
 						affectRows, err := driver.ClearExpired(beforeTime)

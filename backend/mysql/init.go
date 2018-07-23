@@ -10,6 +10,7 @@ func InitTableForMySQL(dataSourceName string) {
 	tableCreateSQL := `
 	CREATE TABLE IF NOT EXISTS histories (
 		id int(10) unsigned NOT NULL AUTO_INCREMENT,
+		biz_name varchar(100) NOT NULL COMMENT '业务名称',
 		task_name varchar(255) NOT NULL COMMENT '任务名', 
 		command varchar(255) NOT NULL COMMENT '命令', 
 		channel varchar(255) NOT NULL COMMENT '执行的队列', 

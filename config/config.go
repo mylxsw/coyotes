@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"time"
 
 	"github.com/mylxsw/coyotes/brokers"
@@ -20,6 +21,7 @@ type HTTPConfig struct {
 
 // Config hold all the configuration
 type Config struct {
+	BizName          string
 	Redis            RedisConfig
 	HTTP             HTTPConfig
 	Concurrent       int
@@ -54,6 +56,7 @@ var runtime *Runtime
 
 // InitRuntime init the configuration for app
 func InitRuntime(
+	bizName string,
 	redisAddr string,
 	redisPassword string,
 	redisAddrDepressed string,
@@ -80,6 +83,7 @@ func InitRuntime(
 
 	runtime = &Runtime{
 		Config: Config{
+			BizName:    strings.Replace(bizName, " ", "-", -1),
 			PidFile:    pidFile,
 			Concurrent: concurrent,
 			Redis: RedisConfig{

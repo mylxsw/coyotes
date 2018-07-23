@@ -1,13 +1,13 @@
 BUILD_TIME=$(shell date -u "+%Y%m%d%H%M%S")
 
 run:build-mac
-	./bin/coyotes -colorful-tty=true -debug=true
+	./bin/coyotes -colorful-tty=true -debug=true -biz-name=test
 run-with-backend:build-mac
-	./bin/coyotes -colorful-tty=true -debug=true -backend-storage="mysql:root:@tcp(127.0.0.1:3306)/coyotes?charset=utf8&parseTime=True&loc=Local" -backend-keep-days=1
+	./bin/coyotes -colorful-tty=true -debug=true -backend-storage="mysql:root:@tcp(127.0.0.1:3306)/coyotes?charset=utf8&parseTime=True&loc=Local" -backend-keep-days=1 -biz-name=test
 run-no-worker:build-mac
-	./bin/coyotes -colorful-tty=true -task-mode=false -debug=true
+	./bin/coyotes -colorful-tty=true -task-mode=false -debug=true -biz-name=test
 run-redis-230:build-mac
-	./bin/coyotes -colorful-tty=true -debug=true -host 192.168.1.230:6379
+	./bin/coyotes -colorful-tty=true -debug=true -host 192.168.1.230:6379 -biz-name=test
 
 run-race-check:
 	go run -race *.go -colorful-tty=true -debug=true -backend-storage="mysql:root:@tcp(127.0.0.1:3306)/coyotes?charset=utf8&parseTime=True&loc=Local" -backend-keep-days=1
